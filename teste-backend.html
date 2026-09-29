@@ -19,6 +19,8 @@
   <button type="button" id="ping" disabled>Testar conexão</button>
   <button type="button" id="unidade" disabled>Identificar unidade</button>
   <button type="button" id="listar" disabled>Listar certificados</button>
+  <button type="button" id="historico" disabled>Listar histórico de envios</button>
+  <button type="button" id="reparos" disabled>Listar solicitações de reparo</button>
   <input id="buscaNome" type="search" placeholder="Nome do servidor" style="padding:12px 10px;min-width:220px;margin-right:8px">
   <button type="button" id="buscar" disabled>Buscar certificados</button>
   <a class="button" id="abrirBackend" target="_blank" rel="noopener"
@@ -42,6 +44,8 @@
       const ping = document.getElementById('ping');
       const unidade = document.getElementById('unidade');
       const listar = document.getElementById('listar');
+      const historico = document.getElementById('historico');
+      const reparos = document.getElementById('reparos');
       const buscar = document.getElementById('buscar');
       const buscaNome = document.getElementById('buscaNome');
 
@@ -67,6 +71,8 @@
         ping.disabled = false;
         unidade.disabled = false;
         listar.disabled = false;
+        historico.disabled = false;
+        reparos.disabled = false;
         buscar.disabled = false;
       }
 
@@ -113,6 +119,8 @@
       ping.addEventListener('click', () => enviar('PING'));
       unidade.addEventListener('click', () => enviar('IDENTIFICAR_UNIDADE'));
       listar.addEventListener('click', () => enviar('LISTAR_CERTIFICADOS', { ano: '2026' }));
+      historico.addEventListener('click', () => enviar('LISTAR_HISTORICO_ENVIOS', { limite: 20 }));
+      reparos.addEventListener('click', () => enviar('LISTAR_SOLICITACOES_REPARO', { limite: 20 }));
       buscar.addEventListener('click', () => enviar('BUSCAR_CERTIFICADOS', { busca: buscaNome.value, ano: '2026' }));
     })();
   </script>
