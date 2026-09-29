@@ -1,6 +1,12 @@
-# Central de Certificados SEMEC — visual aprovado + brasões
+# Central de Certificados SEMEC — visual aprovado + backend
 
-Esta versão mantém o visual aprovado da Área da Escola e adiciona os brasões já disponíveis.
+Esta versão mantém o visual aprovado da Área da Escola, os brasões já disponíveis e a integração validada com o backend institucional.
+
+- Identificação automática da unidade e do perfil de acesso pelo Bridge.
+- Listagem e pesquisa no `REGISTRO_CERTIFICADOS_2026`.
+- Abertura e download do PDF quando o registro oficial fornece o link.
+- Estados reais de carregamento, lista vazia, erro e nova tentativa.
+- A antiga tela técnica permanece disponível em `teste-backend.html`.
 
 - 33 brasões/identidades específicas de unidades.
 - Identidade geral da Educação Escolar Indígena como fallback para escola indígena sem brasão próprio.
@@ -11,7 +17,7 @@ Esta versão mantém o visual aprovado da Área da Escola e adiciona os brasões
 Brasões não indígenas ainda faltantes:
 ESC-000002, ESC-000012, ESC-000024 e ESC-000035.
 
-Observação: o parâmetro `?escola=` é somente para teste visual. Em produção, a unidade será definida pela autenticação institucional no backend.
+Observação: o parâmetro `?escola=` é somente para teste visual. Em produção, a unidade definida pela autenticação institucional no backend sempre prevalece.
 
 
 ## Regra de nomenclatura das formações
@@ -59,4 +65,4 @@ Páginas de acompanhamento:
 - `historico-envios.html`
 - `solicitacoes-reparo.html`
 
-O botão `Sair` usa a mesma confirmação visual do Portal. Nesta versão estática, encerra a sessão da prévia no navegador. Quando a autenticação institucional for conectada ao backend, esse mesmo botão será ligado ao encerramento real da sessão.
+O botão `Sair` usa a mesma confirmação visual do Portal e encerra a visualização local no navegador. A autenticação institucional continua sendo controlada pela conta Google reconhecida pelo backend.

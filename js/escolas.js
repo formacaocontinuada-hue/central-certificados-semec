@@ -1,4 +1,5 @@
 window.CENTRAL_ESCOLAS = {
+  "ESC-000001": { nome: "Departamento de Gestão Pedagógica e Políticas Educacionais - SEMEC", brasao: (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS.MUNICIPIO) || "", indigena: false, possuiBrasaoProprio: false },
   "ESC-000002": { nome: "Centro Municipal Agrícola de Ensino Ulisses Guimarães", brasao: (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS.MUNICIPIO) || "", indigena: false, possuiBrasaoProprio: false },
   "ESC-000003": { nome: "Centro Municipal de Ensino Antenor Soares", brasao: (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS["ESC-000003"]) || (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS.MUNICIPIO) || "", indigena: false, possuiBrasaoProprio: true },
   "ESC-000004": { nome: "Centro Municipal de Ensino Atacílio de Souza", brasao: (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS["ESC-000004"]) || (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS.MUNICIPIO) || "", indigena: false, possuiBrasaoProprio: true },

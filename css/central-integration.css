@@ -1,0 +1,93 @@
+/* Complemento da Central: estados da integração com o registro oficial. */
+.central-integration-status {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid #bfd5ec;
+  border-radius: var(--portal-radius-md);
+  background: #f5f9fe;
+  color: #153b68;
+}
+
+.central-integration-status[hidden],
+.central-integration-status [hidden],
+.school-compact-empty[hidden],
+[data-central-logged-out][hidden],
+[data-school-dialog][hidden],
+[data-server-logout-dialog][hidden],
+#search-results[hidden],
+#solicitacoes-reparo[hidden] {
+  display: none !important;
+}
+
+.central-integration-status__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #2d78bd;
+  box-shadow: 0 0 0 5px rgba(45, 120, 189, 0.14);
+}
+
+.central-integration-status > div {
+  display: grid;
+  gap: 2px;
+}
+
+.central-integration-status strong,
+.central-integration-status span {
+  display: block;
+}
+
+.central-integration-status > div > span {
+  color: #526a8a;
+  font-size: 0.9rem;
+}
+
+.central-integration-status[data-state="loading"] .central-integration-status__dot {
+  animation: central-status-pulse 1.4s ease-in-out infinite;
+}
+
+.central-integration-status[data-state="ready"] {
+  border-color: #add8bf;
+  background: #f2fbf5;
+  color: #145b35;
+}
+
+.central-integration-status[data-state="ready"] .central-integration-status__dot {
+  background: #258452;
+  box-shadow: 0 0 0 5px rgba(37, 132, 82, 0.14);
+}
+
+.central-integration-status[data-state="error"] {
+  border-color: #efc2c2;
+  background: #fff7f7;
+  color: #842c2c;
+}
+
+.central-integration-status[data-state="error"] .central-integration-status__dot {
+  background: #c44949;
+  box-shadow: 0 0 0 5px rgba(196, 73, 73, 0.14);
+}
+
+@keyframes central-status-pulse {
+  50% { opacity: 0.48; transform: scale(0.82); }
+}
+
+@media (max-width: 640px) {
+  .central-integration-status {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .central-integration-status .server-button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .central-integration-status[data-state="loading"] .central-integration-status__dot {
+    animation: none;
+  }
+}

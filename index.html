@@ -5,13 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Certificados | Área da Escola | Portal SEMEC</title>
   <meta name="description" content="Consulta institucional de certificados da Área da Escola.">
-  <link rel="stylesheet" href="css/style-01.css">
-  <link rel="stylesheet" href="css/style-02.css">
-  <link rel="stylesheet" href="css/style-03.css">
-  <link rel="stylesheet" href="css/style-04.css">
-  <link rel="stylesheet" href="css/style-05.css">
-  <link rel="stylesheet" href="css/style-06.css">
-  <link rel="stylesheet" href="css/style-07.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="css/central-integration.css">
 </head>
 <body class="server-home-page school-area-page school-dashboard-page" data-servidor-protected>
   <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
@@ -61,21 +56,30 @@
         <div class="server-topbar__actions">
           <div class="server-user-summary" aria-label="Conta institucional autenticada">
             <span class="server-avatar server-avatar--school"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="" data-school-avatar-img></span>
-            <div><strong data-school-name-topbar>CME Unidade Escolar</strong><span>Conta institucional</span></div>
+            <div><strong data-school-name-topbar>Identificando unidade...</strong><span data-account-kind>Conta institucional</span></div>
           </div>
         </div>
       </header>
 
       <main class="server-main" id="conteudo-principal" tabindex="-1">
         <div class="server-content school-dashboard-content school-page-content">
+          <section class="central-integration-status" data-central-status data-state="loading" role="status" aria-live="polite">
+            <span class="central-integration-status__dot" aria-hidden="true"></span>
+            <div>
+              <strong data-central-status-title>Conectando à Central</strong>
+              <span data-central-status-detail>Validando a conta institucional e identificando a unidade.</span>
+            </div>
+            <button class="server-button server-button--ghost" type="button" data-central-retry hidden>Tentar novamente</button>
+          </section>
+
           <section class="school-unit-card" aria-labelledby="school-unit-title">
             <div class="school-unit-card__logo"><img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="" data-school-logo></div>
             <div class="school-unit-card__content">
               <p class="server-kicker">Unidade identificada</p>
-              <h2 id="school-unit-title" data-school-name>CME Unidade Escolar</h2>
-              <span class="school-unit-network">Rede Municipal de Ensino</span>
+              <h2 id="school-unit-title" data-school-name>Identificando unidade...</h2>
+              <span class="school-unit-network" data-school-network>Rede Municipal de Ensino</span>
               <dl class="school-unit-meta">
-                <div><dt>Acesso</dt><dd>Conta institucional da unidade</dd></div>
+                <div><dt>Acesso</dt><dd data-account-kind>Conta institucional</dd></div>
                 <div><dt>Serviço</dt><dd>Central de Certificados</dd></div>
               </dl>
             </div>
@@ -107,11 +111,11 @@
           <section class="server-section school-card school-training-filters" aria-labelledby="certificate-filter-title">
             <div class="server-section-heading"><div><p class="server-kicker">Buscar certificado</p><h2 id="certificate-filter-title">Buscar e filtrar</h2></div></div>
             <form class="school-training-filter-form" data-certificate-filter-form>
-              <label><span>Pesquisar servidor</span><input type="search" name="busca" autocomplete="off" placeholder="Digite o nome do servidor"></label>
-              <label><span>Ano</span><select name="ano"><option value="2026">2026</option></select></label>
-              <label><span>Formação</span><select name="formacao"><option value="">Todas</option><option value="FORMACAO_REDE">Formação em Rede</option><option value="FORMACAO_CENTRO_ENSINO">Formação do Centro de Ensino</option><option value="PALESTRAS_SEMINARIOS">Palestras e Seminários</option></select></label>
-              <label><span>Situação</span><select name="situacao"><option value="ativo">Ativo</option><option value="substituido">Substituído</option><option value="cancelado">Cancelado</option></select></label>
-              <div class="school-filter-actions"><button class="server-button server-button--primary" type="submit">Pesquisar</button><button class="server-button server-button--ghost" type="button" data-clear-filters>Limpar</button></div>
+              <label><span>Pesquisar servidor</span><input type="search" name="busca" autocomplete="off" placeholder="Digite o nome do servidor" disabled></label>
+              <label><span>Ano</span><select name="ano" disabled><option value="2026">2026</option></select></label>
+              <label><span>Formação</span><select name="formacao" disabled><option value="">Todas</option><option value="FORMACAO_REDE">Formação em Rede</option><option value="FORMACAO_CENTRO_ENSINO">Formação do Centro de Ensino</option><option value="PALESTRAS_SEMINARIOS">Palestras e Seminários</option></select></label>
+              <label><span>Situação</span><select name="situacao" disabled><option value="ativo">Ativo</option><option value="substituido">Substituído</option><option value="cancelado">Cancelado</option></select></label>
+              <div class="school-filter-actions"><button class="server-button server-button--primary" type="submit" disabled>Pesquisar</button><button class="server-button server-button--ghost" type="button" data-clear-filters disabled>Limpar</button></div>
             </form>
           </section>
 
@@ -130,27 +134,13 @@
           <section class="server-section school-card" id="certificate-results" aria-labelledby="certificate-results-title">
             <div class="server-section-heading school-server-list-header">
               <div><p class="server-kicker">Certificados</p><h2 id="certificate-results-title">Certificados disponíveis</h2></div>
-              <span data-existing-count>3 certificados</span>
+              <span data-existing-count>0 certificados</span>
             </div>
 
-            <div class="school-record-list" data-existing-results>
-              <article class="school-record-row" data-person-name="Claudia Maria Ribas de Sousa" data-ano="2026" data-formacao="FORMACAO_CENTRO_ENSINO" data-situacao="ativo">
-                <span class="school-type">Servidor</span><h3>Claudia Maria Ribas de Sousa</h3>
-                <dl class="school-detail-list"><div><dt>Formação</dt><dd>Formação do Centro de Ensino</dd></div><div><dt>Unidade vinculada</dt><dd>CME Edivânia Tavares</dd></div><div><dt>Carga horária</dt><dd>10h</dd></div><div><dt>Ano / situação</dt><dd>2026 - Ativo</dd></div></dl>
-                <div class="school-table-actions"><button class="server-button server-button--primary" type="button" data-demo-view>Visualizar</button><button class="server-button server-button--ghost" type="button" data-demo-download>Baixar PDF</button><button class="server-button server-button--ghost" type="button" data-demo-send data-person="Claudia Maria Ribas de Sousa">Enviar ao servidor</button><button class="server-button server-button--ghost" type="button" data-demo-repair data-person="Claudia Maria Ribas de Sousa">Solicitar reparo</button></div>
-              </article>
-
-              <article class="school-record-row" data-person-name="Steffany Gabrielly Neri de Oliveira e Oliveira" data-ano="2026" data-formacao="FORMACAO_CENTRO_ENSINO" data-situacao="ativo">
-                <span class="school-type">Servidor</span><h3>Steffany Gabrielly Neri de Oliveira e Oliveira</h3>
-                <dl class="school-detail-list"><div><dt>Formação</dt><dd>Formação do Centro de Ensino</dd></div><div><dt>Unidade vinculada</dt><dd>CME Dona Nena</dd></div><div><dt>Carga horária</dt><dd>2h</dd></div><div><dt>Ano / situação</dt><dd>2026 - Ativo</dd></div></dl>
-                <div class="school-table-actions"><button class="server-button server-button--primary" type="button" data-demo-view>Visualizar</button><button class="server-button server-button--ghost" type="button" data-demo-download>Baixar PDF</button><button class="server-button server-button--ghost" type="button" data-demo-send data-person="Steffany Gabrielly Neri de Oliveira e Oliveira">Enviar ao servidor</button><button class="server-button server-button--ghost" type="button" data-demo-repair data-person="Steffany Gabrielly Neri de Oliveira e Oliveira">Solicitar reparo</button></div>
-              </article>
-
-              <article class="school-record-row" data-person-name="Maria Rozeni Santana Lobo" data-ano="2026" data-formacao="FORMACAO_CENTRO_ENSINO" data-situacao="ativo">
-                <span class="school-type">Servidor</span><h3>Maria Rozeni Santana Lobo</h3>
-                <dl class="school-detail-list"><div><dt>Formação</dt><dd>Formação do Centro de Ensino</dd></div><div><dt>Unidade vinculada</dt><dd>CME Atacílio</dd></div><div><dt>Carga horária</dt><dd>10h</dd></div><div><dt>Ano / situação</dt><dd>2026 - Ativo</dd></div></dl>
-                <div class="school-table-actions"><button class="server-button server-button--primary" type="button" data-demo-view>Visualizar</button><button class="server-button server-button--ghost" type="button" data-demo-download>Baixar PDF</button><button class="server-button server-button--ghost" type="button" data-demo-send data-person="Maria Rozeni Santana Lobo">Enviar ao servidor</button><button class="server-button server-button--ghost" type="button" data-demo-repair data-person="Maria Rozeni Santana Lobo">Solicitar reparo</button></div>
-              </article>
+            <div class="school-record-list" data-existing-results></div>
+            <div class="school-compact-empty" data-existing-empty>
+              <strong>Carregando certificados</strong>
+              <span>Consultando o registro oficial da Central.</span>
             </div>
 
           </section>
@@ -226,6 +216,7 @@
   <script src="js/logos-14.js"></script>
   <script src="js/escolas.js"></script>
   <script src="js/formacoes.js"></script>
+  <script src="js/backend.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
