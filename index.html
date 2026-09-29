@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Teste Bridge — Central de Certificados</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; }
+    button { padding: 12px 16px; margin-right: 8px; cursor: pointer; }
+    pre { background: #f5f7fa; padding: 16px; border-radius: 8px; white-space: pre-wrap; }
+    iframe { width: 1px; height: 1px; border: 0; position: absolute; left: -9999px; }
+  </style>
+</head>
+<body>
+  <h1>Teste de comunicação GitHub → Apps Script</h1>
+  <p>Esta página serve apenas para validar a ponte técnica antes de ligarmos a interface oficial.</p>
+
+  <button type="button" id="ping" disabled>Testar conexão</button>
+  <button type="button" id="unidade" disabled>Identificar unidade</button>
+
+  <pre id="saida">Aguardando o backend...</pre>
+
+  <iframe
+    id="bridge"
+    src="https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwWAPJy5kljGKMWpyuXmoRv2vyUdtrSr_jTgkrIjwRDcv-JVMQCL8Sj2WDclJXbgsWt/exec"
+    title="Ponte técnica da Central de Certificados">
+  </iframe>
+
+  <script>
+    (() => {
+      'use strict';
+
+      const WEBAPP_ORIGIN = 'https://script.google.com';
+      const iframe = document.getElementById('bridge');
+      const saida = document.getElementById('saida');
+      const ping = document.getElementById('ping');
+      const unidade = document.getElementById('unidade');
+      const pendentes = new Map();
+
+      function id() {
+        return 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2);
+      }
+
+      function enviar(acao) {
+        const requestId = id();
+
+        saida.textContent = 'Consultando ' + acao + '...';
+
+        pendentes.set(requestId, true);
+
+        iframe.contentWindow.postMessage(
+          {
+            canal: 'CENTRAL_CERTIFICADOS_SEMEC',
+            requestId,
+            acao,
+            dados: {}
+          },
+          WEBAPP_ORIGIN
+        );
+      }
+
+      window.addEventListener('message', (event) => {
+        if (!event.origin.includes('google')) return;
+
+        const msg = event.data || {};
+
+        if (msg.canal !== 'CENTRAL_CERTIFICADOS_SEMEC') return;
+
+        if (msg.tipo === 'BRIDGE_READY') {
+          saida.textContent = 'Bridge pronto. Pode testar.';
+          ping.disabled = false;
+          unidade.disabled = false;
+          return;
+        }
+
+        if (!msg.requestId || !pendentes.has(msg.requestId)) return;
+
+        pendentes.delete(msg.requestId);
+        saida.textContent = JSON.stringify(msg, null, 2);
+      });
+
+      ping.addEventListener('click', () => enviar('PING'));
+      unidade.addEventListener('click', () => enviar('IDENTIFICAR_UNIDADE'));
+    })();
+  </script>
+</body>
+</html>
