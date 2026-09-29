@@ -65,7 +65,16 @@
 
       <main class="server-main" id="conteudo-principal" tabindex="-1">
         <div class="server-content school-dashboard-content school-page-content">
-          
+
+<section class="central-integration-status" data-central-status data-state="loading" role="status" aria-live="polite">
+  <span class="central-integration-status__dot" aria-hidden="true"></span>
+  <div>
+    <strong data-central-status-title>Conectando à Central</strong>
+    <span data-central-status-detail>Validando a conta institucional e carregando o histórico.</span>
+  </div>
+  <button class="server-button server-button--ghost" type="button" data-central-retry hidden>Tentar novamente</button>
+</section>
+
 <section class="school-page-heading school-page-heading--training">
   <div class="school-page-heading__content">
     <p class="server-kicker">Acompanhamento</p>

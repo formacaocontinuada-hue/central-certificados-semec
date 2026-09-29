@@ -300,12 +300,20 @@
   const searchResultList = document.querySelector('[data-search-results-list]');
   const searchEmpty = document.querySelector('[data-search-empty]');
   const repairSection = document.querySelector('#solicitacoes-reparo');
+  const repairList = document.querySelector('[data-repair-list]');
+  const repairEmpty = document.querySelector('[data-repair-empty]');
+  const repairPageList = document.querySelector('[data-repair-page-list]');
+  const repairPageEmpty = document.querySelector('[data-repair-page-empty]');
+  const sendHistoryList = document.querySelector('[data-send-history-list]');
+  const sendHistoryEmpty = document.querySelector('[data-send-history-empty]');
   const centralStatus = document.querySelector('[data-central-status]');
   const centralStatusTitle = document.querySelector('[data-central-status-title]');
   const centralStatusDetail = document.querySelector('[data-central-status-detail]');
   const centralRetry = document.querySelector('[data-central-retry]');
   const backend = window.CENTRAL_BACKEND ? new window.CENTRAL_BACKEND.BridgeClient() : null;
   let certificadosAtuais = [];
+  let solicitacoesAtuais = [];
+  const certificadosPorId = new Map();
 
   const chaveCanonica = (value = '') => String(value)
     .normalize('NFD')
@@ -425,6 +433,9 @@
         'Unidade não informada'
       ).trim(),
       cargaHoraria: formatarCargaHoraria(primeiroValor(registro, 'cargaHoraria', 'cargaHorariaTotal', 'carga', 'horas')),
+      cpfMascarado: String(primeiroValor(registro, 'cpfMascarado', 'cpf') || '').trim(),
+      percentual: String(primeiroValor(registro, 'percentual', 'presenca', 'frequencia') || '').trim(),
+      dataEmissao: String(primeiroValor(registro, 'dataEmissao', 'emitidoEm') || '').trim(),
       ano: String(primeiroValor(registro, 'ano', 'anoReferencia', 'exercicio') || '2026').trim(),
       situacao,
       situacaoId: chaveCanonica(situacao),
@@ -525,19 +536,42 @@
     downloadButton.dataset.certificateDownload = certificado.downloadUrl;
     downloadButton.disabled = !certificado.downloadUrl;
 
+    const sendButton = document.createElement('button');
+    sendButton.className = 'server-button server-button--ghost';
+    sendButton.type = 'button';
+    sendButton.textContent = 'Enviar ao servidor';
+    sendButton.dataset.certificateSend = certificado.id;
+    sendButton.disabled = !certificado.id || certificado.situacaoId !== 'ativo';
+
+    const repairButton = document.createElement('button');
+    repairButton.className = 'server-button server-button--ghost';
+    repairButton.type = 'button';
+    repairButton.textContent = 'Solicitar reparo';
+    repairButton.dataset.certificateRepair = certificado.id;
+    repairButton.disabled = !certificado.id || certificado.situacaoId !== 'ativo';
+
+    if (certificado.situacaoId !== 'ativo') {
+      const unavailableAction = 'Esta ação está disponível somente para certificados ativos.';
+      sendButton.title = unavailableAction;
+      repairButton.title = unavailableAction;
+    }
+
     if (!certificado.visualizacaoUrl || !certificado.downloadUrl) {
       const unavailable = 'O PDF ainda não foi disponibilizado pelo registro oficial.';
       if (!certificado.visualizacaoUrl) viewButton.title = unavailable;
       if (!certificado.downloadUrl) downloadButton.title = unavailable;
     }
 
-    actions.append(viewButton, downloadButton);
+    actions.append(viewButton, downloadButton, sendButton, repairButton);
     article.append(type, title, details, actions);
     return article;
   };
 
   const renderizarCertificados = (container, certificados) => {
     if (!container) return;
+    certificados.forEach(certificado => {
+      if (certificado.id) certificadosPorId.set(certificado.id, certificado);
+    });
     container.replaceChildren(...certificados.map(criarLinhaCertificado));
   };
 
@@ -559,6 +593,116 @@
     if (span) span.textContent = detail;
   };
 
+  const atualizarEstadoVazio = (element, title, detail, visible = true) => {
+    if (!element) return;
+    element.hidden = !visible;
+    const strong = element.querySelector('strong');
+    const span = element.querySelector('span');
+    if (strong) strong.textContent = title;
+    if (span) span.textContent = detail;
+  };
+
+  const atualizarContagemNomeada = (selector, total, singular, plural) => {
+    const element = document.querySelector(selector);
+    if (element) element.textContent = `${total} ${total === 1 ? singular : plural}`;
+  };
+
+  const formatarStatusAcao = (valor) => {
+    const status = chaveCanonica(valor);
+    if (status === 'enviado') return 'Enviado';
+    if (status === 'erro') return 'Falha no envio';
+    if (status === 'emanalise') return 'Em análise';
+    if (status === 'concluida' || status === 'concluido') return 'Concluída';
+    if (status === 'recusada' || status === 'indeferida') return 'Não aprovada';
+    return String(valor || 'Registrado').replace(/_/g, ' ');
+  };
+
+  const normalizarEnvio = (registro = {}) => ({
+    id: String(primeiroValor(registro, 'idEnvio', 'id') || '').trim(),
+    dataHora: String(primeiroValor(registro, 'dataHora', 'data', 'enviadoEm') || '').trim(),
+    idCertificado: String(primeiroValor(registro, 'idCertificado', 'certificadoId') || '').trim(),
+    nome: String(primeiroValor(registro, 'nomeCompleto', 'nomeServidor', 'nome') || 'Servidor não informado').trim(),
+    formacao: String(primeiroValor(registro, 'formacao', 'nomeFormacao') || 'Formação não informada').trim(),
+    escola: String(primeiroValor(registro, 'escola', 'unidade') || 'Unidade não informada').trim(),
+    email: String(primeiroValor(registro, 'emailDestinoMascarado', 'emailMascarado') || '').trim(),
+    status: formatarStatusAcao(primeiroValor(registro, 'status')),
+    formaEnvio: String(primeiroValor(registro, 'formaEnvio') || '').replace(/_/g, ' ').toLocaleLowerCase('pt-BR')
+  });
+
+  const normalizarSolicitacao = (registro = {}) => ({
+    id: String(primeiroValor(registro, 'idSolicitacao', 'protocolo', 'id') || '').trim(),
+    dataHora: String(primeiroValor(registro, 'dataHora', 'data', 'criadoEm') || '').trim(),
+    idCertificado: String(primeiroValor(registro, 'idCertificado', 'certificadoId') || '').trim(),
+    nome: String(primeiroValor(registro, 'nomeCompleto', 'nomeServidor', 'nome') || 'Servidor não informado').trim(),
+    formacao: String(primeiroValor(registro, 'formacao', 'nomeFormacao') || 'Formação não informada').trim(),
+    escola: String(primeiroValor(registro, 'escola', 'unidade') || 'Unidade não informada').trim(),
+    categoria: String(primeiroValor(registro, 'categoria') || 'Outro').trim(),
+    descricao: String(primeiroValor(registro, 'descricao') || '').trim(),
+    statusOriginal: String(primeiroValor(registro, 'status') || 'EM_ANALISE').trim(),
+    status: formatarStatusAcao(primeiroValor(registro, 'status') || 'EM_ANALISE'),
+    resposta: String(primeiroValor(registro, 'resposta') || '').trim(),
+    dataAtualizacao: String(primeiroValor(registro, 'dataAtualizacao') || '').trim()
+  });
+
+  const criarLinhaHistorico = (envio) => {
+    const article = document.createElement('article');
+    article.className = 'school-record-row';
+    article.dataset.sendStatus = chaveCanonica(envio.status);
+
+    const type = document.createElement('span');
+    type.className = 'school-type';
+    type.textContent = envio.status;
+
+    const title = document.createElement('h3');
+    title.textContent = envio.nome;
+
+    const details = document.createElement('dl');
+    details.className = 'school-detail-list';
+    adicionarDetalhe(details, 'Formação', envio.formacao);
+    adicionarDetalhe(details, 'Destinatário', envio.email || 'E-mail protegido');
+    adicionarDetalhe(details, 'Data do envio', envio.dataHora || 'Não informada');
+    adicionarDetalhe(details, 'Protocolo', envio.id || 'Não informado');
+
+    article.append(type, title, details);
+    return article;
+  };
+
+  const criarLinhaSolicitacao = (solicitacao) => {
+    const article = document.createElement('article');
+    article.className = 'school-record-row';
+    article.dataset.repairStatus = chaveCanonica(solicitacao.statusOriginal);
+
+    const type = document.createElement('span');
+    type.className = 'school-type';
+    type.textContent = solicitacao.status;
+
+    const title = document.createElement('h3');
+    title.textContent = solicitacao.nome;
+
+    const details = document.createElement('dl');
+    details.className = 'school-detail-list';
+    adicionarDetalhe(details, 'Categoria', solicitacao.categoria);
+    adicionarDetalhe(details, 'Descrição', solicitacao.descricao || 'Não informada');
+    adicionarDetalhe(details, 'Data da solicitação', solicitacao.dataHora || 'Não informada');
+    adicionarDetalhe(details, 'Protocolo', solicitacao.id || 'Não informado');
+    if (solicitacao.resposta) adicionarDetalhe(details, 'Resposta da SEMEC', solicitacao.resposta);
+
+    article.append(type, title, details);
+    return article;
+  };
+
+  const renderizarHistorico = (envios) => {
+    if (!sendHistoryList) return;
+    sendHistoryList.replaceChildren(...envios.map(criarLinhaHistorico));
+  };
+
+  const renderizarSolicitacoes = (solicitacoes) => {
+    const linhasPagina = solicitacoes.map(criarLinhaSolicitacao);
+    const linhasResumo = solicitacoes.map(criarLinhaSolicitacao);
+    repairPageList?.replaceChildren(...linhasPagina);
+    repairList?.replaceChildren(...linhasResumo);
+  };
+
   const updateSummaryCards = () => {
     const activeRows = certificadosAtuais.filter(certificado => certificado.situacaoId === 'ativo');
     const uniquePeople = new Set(
@@ -577,7 +721,7 @@
     if (peopleEl) peopleEl.textContent = String(uniquePeople.size);
     if (yearEl) yearEl.textContent = year;
     if (repairsEl) repairsEl.textContent = String(
-      document.querySelectorAll('[data-repair-list] [data-repair-status="em_analise"]').length
+      solicitacoesAtuais.filter(item => chaveCanonica(item.statusOriginal) === 'emanalise').length
     );
   };
 
@@ -629,6 +773,69 @@
     }
   };
 
+  const carregarHistoricoEnvios = async () => {
+    if (!sendHistoryList || !backend) return;
+
+    definirStatus('loading', 'Carregando histórico', 'Consultando os envios registrados pela unidade.');
+    renderizarHistorico([]);
+    atualizarEstadoVazio(sendHistoryEmpty, 'Carregando histórico', 'Consultando o registro oficial da Central.');
+    atualizarContagemNomeada('[data-send-history-count]', 0, 'envio', 'envios');
+
+    const result = extrairResultado(await backend.request('LISTAR_HISTORICO_ENVIOS', { limite: 200 }));
+    if (result.unidade) aplicarIdentidadeUnidade(result.unidade);
+    const registros = Array.isArray(result.envios) ? result.envios.map(normalizarEnvio) : [];
+    renderizarHistorico(registros);
+    atualizarContagemNomeada('[data-send-history-count]', registros.length, 'envio', 'envios');
+    atualizarEstadoVazio(
+      sendHistoryEmpty,
+      'Nenhum envio registrado',
+      'Quando um certificado for enviado ao servidor, o registro aparecerá aqui.',
+      registros.length === 0
+    );
+    definirStatus('ready', 'Histórico atualizado', `${registros.length} envio${registros.length === 1 ? '' : 's'} localizado${registros.length === 1 ? '' : 's'}.`);
+  };
+
+  const carregarSolicitacoesReparo = async ({ silencioso = false } = {}) => {
+    if ((!repairPageList && !repairList) || !backend) return;
+
+    if (!silencioso) {
+      definirStatus('loading', 'Carregando solicitações', 'Consultando os reparos registrados pela unidade.');
+    }
+    renderizarSolicitacoes([]);
+    atualizarEstadoVazio(repairPageEmpty, 'Carregando solicitações', 'Consultando o registro oficial da Central.');
+    atualizarEstadoVazio(repairEmpty, 'Carregando solicitações', 'Consultando o registro oficial da Central.');
+
+    const result = extrairResultado(await backend.request('LISTAR_SOLICITACOES_REPARO', { limite: 200 }));
+    if (result.unidade) aplicarIdentidadeUnidade(result.unidade);
+    solicitacoesAtuais = Array.isArray(result.solicitacoes)
+      ? result.solicitacoes.map(normalizarSolicitacao)
+      : [];
+    renderizarSolicitacoes(solicitacoesAtuais);
+    atualizarContagemNomeada('[data-repair-page-count]', solicitacoesAtuais.length, 'solicitação', 'solicitações');
+    atualizarContagemNomeada('[data-repair-count]', solicitacoesAtuais.length, 'solicitação', 'solicitações');
+    atualizarEstadoVazio(
+      repairPageEmpty,
+      'Nenhuma solicitação registrada',
+      'As solicitações enviadas pela unidade aparecerão aqui para acompanhamento.',
+      solicitacoesAtuais.length === 0
+    );
+    atualizarEstadoVazio(
+      repairEmpty,
+      'Nenhum reparo em análise',
+      'As solicitações enviadas pela unidade aparecerão aqui para acompanhamento.',
+      solicitacoesAtuais.length === 0
+    );
+    updateSummaryCards();
+
+    if (!silencioso) {
+      definirStatus(
+        'ready',
+        'Solicitações atualizadas',
+        `${solicitacoesAtuais.length} solicitaç${solicitacoesAtuais.length === 1 ? 'ão localizada' : 'ões localizadas'}.`
+      );
+    }
+  };
+
   const iniciarBackend = async () => {
     if (!backend) {
       definirStatus('error', 'Integração indisponível', 'Os arquivos da ponte não foram carregados.', { retry: true });
@@ -655,11 +862,33 @@
           `Carregando certificados${connection.version ? ` pela ponte ${connection.version}` : ''}.`
         );
         await carregarCertificados();
+        try {
+          await carregarSolicitacoesReparo({ silencioso: true });
+        } catch (_) {
+          solicitacoesAtuais = [];
+          renderizarSolicitacoes([]);
+          updateSummaryCards();
+        }
+        return;
       }
+
+      if (sendHistoryList) {
+        await carregarHistoricoEnvios();
+        return;
+      }
+
+      if (repairPageList) {
+        await carregarSolicitacoesReparo();
+        return;
+      }
+
+      definirStatus('ready', 'Central conectada', 'Conta institucional e unidade identificadas.');
     } catch (error) {
       certificadosAtuais = [];
       renderizarCertificados(existingResultList, []);
       mostrarVazioExistente('Não foi possível carregar os certificados', error.message || 'Tente novamente em instantes.');
+      atualizarEstadoVazio(sendHistoryEmpty, 'Não foi possível carregar o histórico', error.message || 'Tente novamente em instantes.');
+      atualizarEstadoVazio(repairPageEmpty, 'Não foi possível carregar as solicitações', error.message || 'Tente novamente em instantes.');
       atualizarContagem('[data-existing-count]', 0);
       updateSummaryCards();
       definirStatus('error', 'Não foi possível conectar', error.message || 'Tente novamente em instantes.', { retry: true });
@@ -774,6 +1003,112 @@
     updateSummaryCards();
   });
 
+  const mostrarErroAcao = (form, message) => {
+    const error = form?.querySelector('[data-action-error]');
+    if (!error) return;
+    error.textContent = message;
+    error.hidden = false;
+  };
+
+  const definirAcaoOcupada = (form, submit, busy, busyLabel, idleLabel) => {
+    form?.querySelectorAll('input, select, textarea, button').forEach(control => {
+      control.disabled = busy;
+    });
+    if (submit) {
+      submit.disabled = busy;
+      submit.textContent = busy ? busyLabel : idleLabel;
+    }
+    dialogActions?.querySelectorAll('button').forEach(button => {
+      button.disabled = busy;
+    });
+  };
+
+  const abrirDialogoEnvio = (certificado) => {
+    openDialog({
+      kicker: 'Enviar certificado',
+      title: certificado.nome,
+      html: '<form class="school-dialog-form" data-send-certificate-form><p>Informe o e-mail confirmado pelo servidor. O envio e a conta solicitante ficarão registrados no histórico.</p><label><span>E-mail do servidor</span><input type="email" name="emailDestino" autocomplete="email" placeholder="nome@exemplo.com" required maxlength="254"></label><label class="school-check-line"><input type="checkbox" name="confirmacao" required> Conferi o endereço e confirmo que ele pertence ao destinatário correto.</label><p class="central-action-message" role="alert" data-action-error hidden></p></form>',
+      actions: '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button><button class="server-button server-button--primary" type="button" data-submit-certificate-send>Confirmar envio</button>'
+    });
+
+    const form = dialogBody?.querySelector('[data-send-certificate-form]');
+    const submit = dialogActions?.querySelector('[data-submit-certificate-send]');
+    form?.querySelector('[name="emailDestino"]')?.focus();
+
+    submit?.addEventListener('click', async () => {
+      if (!form?.reportValidity()) return;
+      const error = form.querySelector('[data-action-error]');
+      if (error) error.hidden = true;
+      const data = new FormData(form);
+      definirAcaoOcupada(form, submit, true, 'Enviando...', 'Confirmar envio');
+
+      try {
+        const result = extrairResultado(await backend.request('ENVIAR_CERTIFICADO', {
+          idCertificado: certificado.id,
+          emailDestino: String(data.get('emailDestino') || '').trim(),
+          confirmado: data.get('confirmacao') === 'on'
+        }));
+        openDialog({
+          kicker: 'Envio registrado',
+          title: 'Certificado enviado',
+          html: '<p data-action-result-message></p><p><strong>Protocolo:</strong> <span data-action-result-protocol></span></p>',
+          actions: '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'
+        });
+        const message = dialogBody?.querySelector('[data-action-result-message]');
+        const protocol = dialogBody?.querySelector('[data-action-result-protocol]');
+        if (message) message.textContent = `Envio confirmado para ${result.emailDestinoMascarado || 'o e-mail informado'}.`;
+        if (protocol) protocol.textContent = result.idEnvio || 'Registrado';
+      } catch (error) {
+        mostrarErroAcao(form, error.message || 'Não foi possível enviar o certificado.');
+        definirAcaoOcupada(form, submit, false, 'Enviando...', 'Confirmar envio');
+      }
+    });
+  };
+
+  const abrirDialogoReparo = (certificado) => {
+    openDialog({
+      kicker: 'Solicitar reparo',
+      title: certificado.nome,
+      html: '<form class="school-dialog-form" data-repair-form><p>Descreva a informação que precisa ser conferida ou corrigida pela SEMEC.</p><label><span>Informação a corrigir</span><select name="categoria" required><option value="Nome do servidor">Nome do servidor</option><option value="CPF">CPF</option><option value="Escola / unidade">Escola / unidade</option><option value="Carga horária">Carga horária</option><option value="Percentual / presença">Percentual / presença</option><option value="Formação / histórico dos encontros">Formação / histórico dos encontros</option><option value="Assinatura">Assinatura</option><option value="Outro">Outro</option></select></label><label><span>Descreva o problema</span><textarea name="descricao" required minlength="10" maxlength="1500" placeholder="Informe o que precisa ser corrigido"></textarea></label><p class="central-action-message" role="alert" data-action-error hidden></p></form>',
+      actions: '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button><button class="server-button server-button--primary" type="button" data-submit-repair>Enviar solicitação</button>'
+    });
+
+    const form = dialogBody?.querySelector('[data-repair-form]');
+    const submit = dialogActions?.querySelector('[data-submit-repair]');
+
+    submit?.addEventListener('click', async () => {
+      if (!form?.reportValidity()) return;
+      const error = form.querySelector('[data-action-error]');
+      if (error) error.hidden = true;
+      const data = new FormData(form);
+      definirAcaoOcupada(form, submit, true, 'Registrando...', 'Enviar solicitação');
+
+      try {
+        const result = extrairResultado(await backend.request('SOLICITAR_REPARO', {
+          idCertificado: certificado.id,
+          categoria: String(data.get('categoria') || '').trim(),
+          descricao: String(data.get('descricao') || '').trim()
+        }));
+        try {
+          await carregarSolicitacoesReparo({ silencioso: true });
+        } catch (_) {
+          // O registro foi confirmado; uma eventual falha de atualização não o desfaz.
+        }
+        openDialog({
+          kicker: 'Solicitação registrada',
+          title: 'Reparo enviado para análise',
+          html: '<p>A SEMEC recebeu a solicitação e ela já pode ser acompanhada na página de reparos.</p><p><strong>Protocolo:</strong> <span data-action-result-protocol></span></p>',
+          actions: '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'
+        });
+        const protocol = dialogBody?.querySelector('[data-action-result-protocol]');
+        if (protocol) protocol.textContent = result.idSolicitacao || 'Registrado';
+      } catch (error) {
+        mostrarErroAcao(form, error.message || 'Não foi possível registrar a solicitação.');
+        definirAcaoOcupada(form, submit, false, 'Registrando...', 'Enviar solicitação');
+      }
+    });
+  };
+
   document.addEventListener('click', (event) => {
     const viewButton = event.target.closest('[data-certificate-view]');
     if (viewButton) {
@@ -794,6 +1129,19 @@
         link.click();
       }
       return;
+    }
+
+    const sendButton = event.target.closest('[data-certificate-send]');
+    if (sendButton) {
+      const certificado = certificadosPorId.get(String(sendButton.dataset.certificateSend || ''));
+      if (certificado) abrirDialogoEnvio(certificado);
+      return;
+    }
+
+    const repairButton = event.target.closest('[data-certificate-repair]');
+    if (repairButton) {
+      const certificado = certificadosPorId.get(String(repairButton.dataset.certificateRepair || ''));
+      if (certificado) abrirDialogoReparo(certificado);
     }
   });
 

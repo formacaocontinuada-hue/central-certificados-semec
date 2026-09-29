@@ -50,6 +50,7 @@ const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
         total: 1,
         unidade,
         certificados: [{
+          'ID_CERTIFICADO': 'CERT-1',
           'NOME_SERVIDOR': 'Rose Maria da Silva',
           'FORMAÇÃO': 'Formação em Rede',
           'UNIDADE_VINCULADA': 'CME Atacílio de Souza',
@@ -57,6 +58,54 @@ const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
           'ANO_REFERÊNCIA': '2026',
           'SITUAÇÃO': 'ATIVO',
           'LINK_PDF': 'https://example.test/cert-1.pdf'
+        }]
+      };
+    } else if (data.acao === 'ENVIAR_CERTIFICADO') {
+      resultado = data.dados.idCertificado === 'CERT-1' && data.dados.emailDestino === 'rose@example.com' && data.dados.confirmado === true
+        ? {
+            ok: true,
+            idEnvio: 'ENV-TESTE-001',
+            emailDestinoMascarado: 'ro***@example.com',
+            formaEnvio: 'ANEXO_E_LINK'
+          }
+        : { ok: false, codigo: 'DADOS_INVALIDOS', mensagem: 'Dados de envio inválidos.' };
+    } else if (data.acao === 'LISTAR_HISTORICO_ENVIOS') {
+      resultado = {
+        ok: true,
+        unidade,
+        total: 1,
+        envios: [{
+          idEnvio: 'ENV-TESTE-001',
+          dataHora: '29/09/2026 10:30:00',
+          idCertificado: 'CERT-1',
+          nomeCompleto: 'Rose Maria da Silva',
+          formacao: 'Formação em Rede',
+          escola: 'CME Atacílio de Souza',
+          emailDestinoMascarado: 'ro***@example.com',
+          status: 'ENVIADO',
+          formaEnvio: 'ANEXO_E_LINK'
+        }]
+      };
+    } else if (data.acao === 'SOLICITAR_REPARO') {
+      resultado = data.dados.idCertificado === 'CERT-1' && data.dados.descricao.length >= 10
+        ? { ok: true, idSolicitacao: 'REP-TESTE-001', status: 'EM_ANALISE' }
+        : { ok: false, codigo: 'DADOS_INVALIDOS', mensagem: 'Dados de reparo inválidos.' };
+    } else if (data.acao === 'LISTAR_SOLICITACOES_REPARO') {
+      resultado = {
+        ok: true,
+        unidade,
+        total: 1,
+        solicitacoes: [{
+          idSolicitacao: 'REP-TESTE-001',
+          dataHora: '29/09/2026 10:35:00',
+          idCertificado: 'CERT-1',
+          nomeCompleto: 'Rose Maria da Silva',
+          formacao: 'Formação em Rede',
+          escola: 'CME Atacílio de Souza',
+          categoria: 'Carga horária',
+          descricao: 'Conferir a carga horária registrada.',
+          status: 'EM_ANALISE',
+          resposta: ''
         }]
       };
     } else {
@@ -103,13 +152,17 @@ const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
   assert.equal(await page.locator('[data-existing-count]').innerText(), '2 certificados');
   assert.equal(await page.locator('[data-summary-active]').innerText(), '1');
   assert.equal(await page.locator('[data-summary-people]').innerText(), '1');
+  assert.equal(await page.locator('[data-summary-repairs]').innerText(), '1');
   assert.equal(await page.locator('[data-central-retry]').isVisible(), false);
   assert.equal(await page.locator('[data-central-logged-out]').isVisible(), false);
   assert.deepEqual(
     await page.locator('[data-existing-results] h3').allTextContents(),
     ['Rose Maria da Silva', 'João de Souza']
   );
-  assert.equal(await page.locator('[data-existing-results] button:disabled').count(), 0);
+  assert.equal(await page.locator('[data-existing-results] button:disabled').count(), 2);
+  assert.equal(await page.locator('[data-existing-results] [data-person-name="Rose Maria da Silva"] button:disabled').count(), 0);
+  assert.equal(await page.locator('[data-existing-results] [data-certificate-send]').count(), 2);
+  assert.equal(await page.locator('[data-existing-results] [data-certificate-repair]').count(), 2);
   assert.equal(await page.getByText('Claudia Maria Ribas de Sousa').count(), 0);
 
   await page.locator('[name="busca"]').fill('ro');
@@ -123,13 +176,46 @@ const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
   assert.equal(await page.locator('[data-search-results-list] h3').innerText(), 'Rose Maria da Silva');
   assert.equal(await page.locator('[data-search-results-list] dd').first().innerText(), 'Formação em Rede');
 
+  await page.locator('[data-existing-results] [data-certificate-send="CERT-1"]').click();
+  await page.locator('[data-send-certificate-form] [name="emailDestino"]').fill('rose@example.com');
+  await page.locator('[data-send-certificate-form] [name="confirmacao"]').check();
+  await page.getByRole('button', { name: 'Confirmar envio' }).click();
+  await page.getByRole('heading', { name: 'Certificado enviado' }).waitFor({ state: 'visible' });
+  assert.match(await page.locator('[data-action-result-message]').innerText(), /ro\*\*\*@example\.com/);
+  assert.equal(await page.locator('[data-action-result-protocol]').innerText(), 'ENV-TESTE-001');
+  await page.getByRole('button', { name: 'Concluir' }).click();
+
+  await page.locator('[data-existing-results] [data-certificate-repair="CERT-1"]').click();
+  await page.locator('[data-repair-form] [name="categoria"]').selectOption('Carga horária');
+  await page.locator('[data-repair-form] [name="descricao"]').fill('Conferir a carga horária registrada.');
+  await page.getByRole('button', { name: 'Enviar solicitação' }).click();
+  await page.getByRole('heading', { name: 'Reparo enviado para análise' }).waitFor({ state: 'visible' });
+  assert.equal(await page.locator('[data-action-result-protocol]').innerText(), 'REP-TESTE-001');
+  await page.getByRole('button', { name: 'Concluir' }).click();
+
   for (const width of [1440, 768, 390]) {
     await page.setViewportSize({ width, height: 900 });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     assert.ok(overflow <= 1, `A página apresentou overflow horizontal em ${width}px: ${overflow}px`);
   }
 
+  const historyUrl = pathToFileURL(path.resolve(__dirname, '..', 'historico-envios.html')).href;
+  await page.goto(historyUrl, { waitUntil: 'load' });
+  await page.locator('[data-central-status][data-state="ready"]').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('[data-send-history-count]').innerText(), '1 envio');
+  assert.equal(await page.locator('[data-send-history-list] h3').innerText(), 'Rose Maria da Silva');
+  assert.match(await page.locator('[data-send-history-list]').innerText(), /ro\*\*\*@example\.com/);
+
+  const repairsUrl = pathToFileURL(path.resolve(__dirname, '..', 'solicitacoes-reparo.html')).href;
+  await page.goto(repairsUrl, { waitUntil: 'load' });
+  await page.locator('[data-central-status][data-state="ready"]').waitFor({ state: 'visible' });
+  assert.equal(await page.locator('[data-repair-page-count]').innerText(), '1 solicitação');
+  assert.equal(await page.locator('[data-repair-page-list] h3').innerText(), 'Rose Maria da Silva');
+  assert.match(await page.locator('[data-repair-page-list]').innerText(), /Conferir a carga horária registrada/);
+
   if (process.env.CENTRAL_SCREENSHOT_PATH) {
+    await page.goto(indexUrl, { waitUntil: 'load' });
+    await page.locator('[data-central-status][data-state="ready"]').waitFor({ state: 'visible' });
     await page.setViewportSize({ width: 1440, height: 1100 });
     await page.evaluate(() => window.scrollTo(0, 0));
     await page.screenshot({ path: process.env.CENTRAL_SCREENSHOT_PATH, fullPage: true });
