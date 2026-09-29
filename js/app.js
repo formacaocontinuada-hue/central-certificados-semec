@@ -401,9 +401,9 @@
     const situacao = formatarSituacao(primeiroValor(registro, 'situacao', 'status', 'estado'));
     const visualizacao = primeiroValor(
       registro,
-      'urlVisualizacao', 'linkVisualizacao', 'visualizarUrl', 'urlPdf', 'linkPdf', 'pdfUrl', 'arquivoUrl', 'urlArquivo'
+      'urlVisualizacao', 'linkVisualizacao', 'visualizarUrl', 'urlPdf', 'linkPdf', 'pdfUrl', 'arquivoUrl', 'urlArquivo', 'linkCertificado'
     ) || (arquivo && typeof arquivo === 'object' ? primeiroValor(arquivo, 'url', 'visualizacao', 'link') : '');
-    const download = primeiroValor(registro, 'urlDownload', 'downloadUrl', 'linkDownload') ||
+    const download = primeiroValor(registro, 'urlDownload', 'downloadUrl', 'linkDownload', 'linkCertificado') ||
       (arquivo && typeof arquivo === 'object' ? primeiroValor(arquivo, 'downloadUrl', 'urlDownload') : '') ||
       visualizacao;
 
