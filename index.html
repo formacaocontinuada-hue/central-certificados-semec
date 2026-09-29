@@ -3,118 +3,218 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Teste Bridge — Central de Certificados</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; }
-    button, a.button { padding: 12px 16px; margin: 0 8px 8px 0; cursor: pointer; display: inline-block; }
-    a.button { border: 1px solid #aaa; color: #111; text-decoration: none; background: #fff; }
-    pre { background: #f5f7fa; padding: 16px; border-radius: 8px; white-space: pre-wrap; }
-    iframe { width: 1px; height: 1px; border: 0; position: absolute; left: -9999px; }
-  </style>
+  <title>Certificados | Área da Escola | Portal SEMEC</title>
+  <meta name="description" content="Consulta institucional de certificados da Área da Escola.">
+  <link rel="stylesheet" href="style.css?v=school-consolidation-20260831d">
 </head>
-<body>
-  <h1>Teste de comunicação GitHub → Apps Script</h1>
-  <p>Esta página valida a ponte técnica antes de ligarmos a interface oficial.</p>
+<body class="server-home-page school-area-page school-dashboard-page" data-servidor-protected>
+  <a class="skip-link" href="#conteudo-principal">Pular para o conteúdo</a>
 
-  <button type="button" id="ping" disabled>Testar conexão</button>
-  <button type="button" id="unidade" disabled>Identificar unidade</button>
-  <button type="button" id="listar" disabled>Listar certificados</button>
-  <input id="buscaNome" type="search" placeholder="Nome do servidor" style="padding:12px 10px;min-width:220px;margin-right:8px">
-  <button type="button" id="buscar" disabled>Buscar certificados</button>
-  <a class="button" id="abrirBackend" target="_blank" rel="noopener"
-     href="https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwBzokI4suZwZmEOJilCJ2N6y7PfWEH26hlJaYdfqCYb6m6VO7JK_-ktGwMlO2MYus/exec?modo=diagnostico">
-    Abrir diagnóstico do backend
-  </a>
+  <div class="server-layout" data-server-app>
+    <aside class="server-sidebar" id="server-sidebar" aria-label="Menu da Área da Escola">
+      <div class="server-sidebar__brand">
+        <img src="assets/brasao-tangara.png" alt="Brasão de Tangará da Serra">
+        <div><strong>Portal SEMEC</strong><span>Área da Escola</span></div>
+      </div>
 
-  <pre id="saida">Aguardando o backend...</pre>
+      <nav class="server-nav" aria-label="Navegação da Central de Certificados">
+        <div class="server-nav__group">
+          <p>Principal</p>
+          <a class="is-active" href="index.html" data-preserve-school aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15H4V3z"></path><path d="M8 11h8"></path><path d="M8 15h5"></path><path d="M17 3v4h4"></path></svg>Certificados</a>
+        </div>
 
-  <iframe
-    id="bridge"
-    src="https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwBzokI4suZwZmEOJilCJ2N6y7PfWEH26hlJaYdfqCYb6m6VO7JK_-ktGwMlO2MYus/exec"
-    title="Ponte técnica da Central de Certificados">
-  </iframe>
+        <div class="server-nav__group">
+          <p>Acompanhamento</p>
+          <a href="historico-envios.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 7v5l3 2"></path></svg>Histórico de envios</a>
+          <a href="solicitacoes-reparo.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.4 2.4-3-3z"></path></svg>Solicitações de reparo</a>
+        </div>
 
-  <script>
-    (() => {
-      'use strict';
+        <div class="server-nav__group">
+          <p>Assistência</p>
+          <a href="ajuda.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.7 2.7 0 0 1 5.1 1.3c0 1.9-2.6 2.2-2.6 4"></path><path d="M12 18h.01"></path></svg>Ajuda</a>
+          <a href="entrar-em-contato.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H7l-3 3z"></path><path d="m7 8 5 4 5-4"></path></svg>Entrar em Contato</a>
+          <a href="politica-privacidade.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-5"></path></svg>Política de Privacidade</a>
+          <a href="acessibilidade.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2"></circle><path d="M5 8h14"></path><path d="M12 6v7"></path><path d="m8 21 4-8 4 8"></path></svg>Acessibilidade</a>
+        </div>
 
-      const saida = document.getElementById('saida');
-      const ping = document.getElementById('ping');
-      const unidade = document.getElementById('unidade');
-      const listar = document.getElementById('listar');
-      const buscar = document.getElementById('buscar');
-      const buscaNome = document.getElementById('buscaNome');
+        <div class="server-nav__group server-nav__group--account">
+          <p>Conta</p>
+          <button type="button" data-server-logout><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></svg>Sair</button>
+        </div>
+      </nav>
+    </aside>
 
-      let bridgePort = null;
-      const pendentes = new Set();
+    <button class="server-backdrop" type="button" aria-label="Fechar menu" data-server-backdrop hidden></button>
 
-      function id() {
-        return 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2);
-      }
+    <div class="server-workspace">
+      <header class="server-topbar">
+        <div class="server-topbar__left">
+          <button class="server-menu-toggle" type="button" aria-label="Abrir menu" aria-controls="server-sidebar" aria-expanded="false" data-server-menu-toggle><span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span></button>
+          <div><p>Área da Escola / Certificados</p><h1>Certificados</h1></div>
+        </div>
+        <div class="server-topbar__actions">
+          <div class="server-user-summary" aria-label="Conta institucional autenticada">
+            <span class="server-avatar server-avatar--school"><img src="assets/brasao-tangara.png" alt="" data-school-avatar-img></span>
+            <div><strong data-school-name-topbar>CME Unidade Escolar</strong><span>Conta institucional</span></div>
+          </div>
+        </div>
+      </header>
 
-      function habilitar(port, versao) {
-        bridgePort = port;
-        bridgePort.start?.();
+      <main class="server-main" id="conteudo-principal" tabindex="-1">
+        <div class="server-content school-dashboard-content school-page-content">
+          <section class="school-unit-card" aria-labelledby="school-unit-title">
+            <div class="school-unit-card__logo"><img src="assets/brasao-tangara.png" alt="" data-school-logo></div>
+            <div class="school-unit-card__content">
+              <p class="server-kicker">Unidade identificada</p>
+              <h2 id="school-unit-title" data-school-name>CME Unidade Escolar</h2>
+              <span class="school-unit-network">Rede Municipal de Ensino</span>
+              <dl class="school-unit-meta">
+                <div><dt>Acesso</dt><dd>Conta institucional da unidade</dd></div>
+                <div><dt>Serviço</dt><dd>Central de Certificados</dd></div>
+              </dl>
+            </div>
+          </section>
 
-        bridgePort.onmessage = (event) => {
-          const msg = event.data || {};
-          if (!msg.requestId || !pendentes.has(msg.requestId)) return;
-          pendentes.delete(msg.requestId);
-          saida.textContent = JSON.stringify(msg, null, 2);
-        };
+          <section class="school-summary-strip" aria-label="Resumo de certificados">
+            <button class="school-summary-item" type="button" data-summary-action="ativos" aria-label="Mostrar certificados ativos">
+              <strong data-summary-active>0</strong><span>Certificados ativos</span>
+            </button>
+            <button class="school-summary-item" type="button" data-summary-action="servidores" aria-label="Mostrar servidores com certificado">
+              <strong data-summary-people>0</strong><span>Servidores com certificado</span>
+            </button>
+            <button class="school-summary-item" type="button" data-summary-action="ano" aria-label="Ir ao filtro de ano">
+              <strong data-summary-year>2026</strong><span>Ano selecionado</span>
+            </button>
+            <button class="school-summary-item" type="button" data-summary-action="reparos" aria-label="Ver solicitações de reparo em análise">
+              <strong data-summary-repairs>0</strong><span>Reparos em análise</span>
+            </button>
+          </section>
 
-        saida.textContent = 'Bridge pronto. Pode testar.' + (versao ? '\nVersão: ' + versao : '');
-        ping.disabled = false;
-        unidade.disabled = false;
-        listar.disabled = false;
-        buscar.disabled = false;
-      }
+          <section class="school-page-heading school-page-heading--training">
+            <div class="school-page-heading__content">
+              <p class="server-kicker">Consulta</p>
+              <h2>Pesquisar certificados</h2>
+              <p>Consulte os certificados da sua unidade ou pesquise outro servidor pelo nome.</p>
+            </div>
+          </section>
 
-      function enviar(acao, dados = {}) {
-        if (!bridgePort) {
-          saida.textContent = 'A ponte ainda não está pronta.';
-          return;
-        }
+          <section class="server-section school-card school-training-filters" aria-labelledby="certificate-filter-title">
+            <div class="server-section-heading"><div><p class="server-kicker">Buscar certificado</p><h2 id="certificate-filter-title">Buscar e filtrar</h2></div></div>
+            <form class="school-training-filter-form" data-certificate-filter-form>
+              <label><span>Pesquisar servidor</span><input type="search" name="busca" autocomplete="off" placeholder="Digite o nome do servidor"></label>
+              <label><span>Ano</span><select name="ano"><option value="2026">2026</option></select></label>
+              <label><span>Formação</span><select name="formacao"><option value="">Todas</option><option value="FORMACAO_REDE">Formação em Rede</option><option value="FORMACAO_CENTRO_ENSINO">Formação do Centro de Ensino</option><option value="PALESTRAS_SEMINARIOS">Palestras e Seminários</option></select></label>
+              <label><span>Situação</span><select name="situacao"><option value="ativo">Ativo</option><option value="substituido">Substituído</option><option value="cancelado">Cancelado</option></select></label>
+              <div class="school-filter-actions"><button class="server-button server-button--primary" type="submit">Pesquisar</button><button class="server-button server-button--ghost" type="button" data-clear-filters>Limpar</button></div>
+            </form>
+          </section>
 
-        const requestId = id();
-        pendentes.add(requestId);
-        saida.textContent = 'Consultando ' + acao + '...';
+          <section class="server-section school-card" id="search-results" aria-labelledby="search-results-title" hidden>
+            <div class="server-section-heading school-server-list-header">
+              <div><p class="server-kicker">Resultado da pesquisa</p><h2 id="search-results-title">Certificados encontrados</h2></div>
+              <span data-search-result-count>0 certificados</span>
+            </div>
+            <div class="school-record-list" data-search-results-list></div>
+            <div class="school-compact-empty" data-search-empty hidden>
+              <strong>Nenhum certificado encontrado</strong>
+              <span>Revise o nome pesquisado ou altere os filtros.</span>
+            </div>
+          </section>
 
-        bridgePort.postMessage({
-          canal: 'CENTRAL_CERTIFICADOS_SEMEC',
-          requestId,
-          acao,
-          dados
-        });
-      }
+          <section class="server-section school-card" id="certificate-results" aria-labelledby="certificate-results-title">
+            <div class="server-section-heading school-server-list-header">
+              <div><p class="server-kicker">Certificados</p><h2 id="certificate-results-title">Certificados disponíveis</h2></div>
+              <span data-existing-count>3 certificados</span>
+            </div>
 
-      window.addEventListener('message', (event) => {
-        const msg = event.data || {};
-        if (msg.canal !== 'CENTRAL_CERTIFICADOS_SEMEC' || msg.tipo !== 'BRIDGE_READY') return;
+            <div class="school-record-list" data-existing-results>
+              <article class="school-record-row" data-person-name="Claudia Maria Ribas de Sousa" data-ano="2026" data-formacao="FORMACAO_CENTRO_ENSINO" data-situacao="ativo">
+                <span class="school-type">Servidor</span><h3>Claudia Maria Ribas de Sousa</h3>
+                <dl class="school-detail-list"><div><dt>Formação</dt><dd>Formação do Centro de Ensino</dd></div><div><dt>Unidade vinculada</dt><dd>CME Edivânia Tavares</dd></div><div><dt>Carga horária</dt><dd>10h</dd></div><div><dt>Ano / situação</dt><dd>2026 - Ativo</dd></div></dl>
+                <div class="school-table-actions"><button class="server-button server-button--primary" type="button" data-demo-view>Visualizar</button><button class="server-button server-button--ghost" type="button" data-demo-download>Baixar PDF</button><button class="server-button server-button--ghost" type="button" data-demo-send data-person="Claudia Maria Ribas de Sousa">Enviar ao servidor</button><button class="server-button server-button--ghost" type="button" data-demo-repair data-person="Claudia Maria Ribas de Sousa">Solicitar reparo</button></div>
+              </article>
 
-        const port = event.ports && event.ports[0];
-        if (!port) {
-          saida.textContent = 'O backend respondeu, mas não entregou o canal de comunicação.';
-          return;
-        }
+              <article class="school-record-row" data-person-name="Steffany Gabrielly Neri de Oliveira e Oliveira" data-ano="2026" data-formacao="FORMACAO_CENTRO_ENSINO" data-situacao="ativo">
+                <span class="school-type">Servidor</span><h3>Steffany Gabrielly Neri de Oliveira e Oliveira</h3>
+                <dl class="school-detail-list"><div><dt>Formação</dt><dd>Formação do Centro de Ensino</dd></div><div><dt>Unidade vinculada</dt><dd>CME Dona Nena</dd></div><div><dt>Carga horária</dt><dd>2h</dd></div><div><dt>Ano / situação</dt><dd>2026 - Ativo</dd></div></dl>
+                <div class="school-table-actions"><button class="server-button server-button--primary" type="button" data-demo-view>Visualizar</button><button class="server-button server-button--ghost" type="button" data-demo-download>Baixar PDF</button><button class="server-button server-button--ghost" type="button" data-demo-send data-person="Steffany Gabrielly Neri de Oliveira e Oliveira">Enviar ao servidor</button><button class="server-button server-button--ghost" type="button" data-demo-repair data-person="Steffany Gabrielly Neri de Oliveira e Oliveira">Solicitar reparo</button></div>
+              </article>
 
-        habilitar(port, msg.versaoBridge || '');
-      });
+              <article class="school-record-row" data-person-name="Maria Rozeni Santana Lobo" data-ano="2026" data-formacao="FORMACAO_CENTRO_ENSINO" data-situacao="ativo">
+                <span class="school-type">Servidor</span><h3>Maria Rozeni Santana Lobo</h3>
+                <dl class="school-detail-list"><div><dt>Formação</dt><dd>Formação do Centro de Ensino</dd></div><div><dt>Unidade vinculada</dt><dd>CME Atacílio</dd></div><div><dt>Carga horária</dt><dd>10h</dd></div><div><dt>Ano / situação</dt><dd>2026 - Ativo</dd></div></dl>
+                <div class="school-table-actions"><button class="server-button server-button--primary" type="button" data-demo-view>Visualizar</button><button class="server-button server-button--ghost" type="button" data-demo-download>Baixar PDF</button><button class="server-button server-button--ghost" type="button" data-demo-send data-person="Maria Rozeni Santana Lobo">Enviar ao servidor</button><button class="server-button server-button--ghost" type="button" data-demo-repair data-person="Maria Rozeni Santana Lobo">Solicitar reparo</button></div>
+              </article>
+            </div>
 
-      window.setTimeout(() => {
-        if (!bridgePort) {
-          saida.textContent =
-            'O backend não concluiu a ponte.\n' +
-            'Clique em “Abrir diagnóstico do backend”. Se o diagnóstico abrir normalmente, ' +
-            'o problema está na ponte incorporada e não na implantação.';
-        }
-      }, 7000);
+          </section>
 
-      ping.addEventListener('click', () => enviar('PING'));
-      unidade.addEventListener('click', () => enviar('IDENTIFICAR_UNIDADE'));
-      listar.addEventListener('click', () => enviar('LISTAR_CERTIFICADOS', { ano: '2026' }));
-      buscar.addEventListener('click', () => enviar('BUSCAR_CERTIFICADOS', { busca: buscaNome.value, ano: '2026' }));
-    })();
-  </script>
+
+          <section class="server-section school-card" id="solicitacoes-reparo" aria-labelledby="repair-list-title" hidden>
+            <div class="server-section-heading school-server-list-header">
+              <div><p class="server-kicker">Acompanhamento</p><h2 id="repair-list-title">Solicitações de reparo</h2></div>
+              <span data-repair-count>0 solicitações</span>
+            </div>
+            <div class="school-compact-empty" data-repair-empty>
+              <strong>Nenhum reparo em análise</strong>
+              <span>As solicitações enviadas pela escola aparecerão aqui para acompanhamento.</span>
+            </div>
+            <div class="school-record-list" data-repair-list></div>
+          </section>
+
+          <footer class="server-footer">
+            <strong>Portal SEMEC</strong>
+            <span>Secretaria Municipal de Educação de Tangará da Serra</span>
+            <nav aria-label="Rodapé interno">
+              <a href="politica-privacidade.html" data-preserve-school>Política de Privacidade</a>
+              <a href="ajuda.html" data-preserve-school>Ajuda</a>
+              <a href="acessibilidade.html" data-preserve-school>Acessibilidade</a>
+            </nav>
+          </footer>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="server-modal server-modal--floating school-dialog" role="dialog" aria-modal="true" aria-labelledby="school-dialog-title" data-school-dialog hidden>
+    <div class="server-modal__panel server-modal__panel--floating" tabindex="-1">
+      <button class="server-floating-close" type="button" aria-label="Fechar" data-dialog-close><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></button>
+      <p class="server-kicker" data-dialog-kicker>Área da Escola</p><h2 id="school-dialog-title" data-dialog-title>Informação</h2><div class="server-floating-body" data-dialog-body></div><div class="server-modal__actions" data-dialog-actions></div>
+    </div>
+  </div>
+
+
+  <div class="server-modal" role="dialog" aria-modal="true" aria-labelledby="server-logout-title" data-server-logout-dialog hidden>
+    <div class="server-modal__panel" tabindex="-1">
+      <h2 id="server-logout-title">Sair da Central de Certificados?</h2>
+      <p>Você precisará entrar novamente para acessar os certificados da unidade.</p>
+      <div class="server-modal__actions">
+        <button class="server-button server-button--primary" type="button" data-server-logout-cancel>Continuar na Central</button>
+        <button class="server-button server-button--ghost" type="button" data-server-logout-confirm>Sair</button>
+      </div>
+    </div>
+  </div>
+
+  <section class="server-placeholder-main" data-central-logged-out hidden>
+    <div class="server-placeholder-card">
+      <p class="server-kicker">Central de Certificados</p>
+      <h1>Sessão encerrada</h1>
+      <p>O acesso institucional foi encerrado nesta prévia da interface.</p>
+      <button class="server-button server-button--primary" type="button" data-central-enter-again>Entrar novamente</button>
+    </div>
+  </section>
+  <script src="js/brasoes-01.js"></script>
+  <script src="js/brasoes-02.js"></script>
+  <script src="js/brasoes-03.js"></script>
+  <script src="js/brasoes-04.js"></script>
+  <script src="js/brasoes-05.js"></script>
+  <script src="js/brasoes-06.js"></script>
+  <script src="js/brasoes-07.js"></script>
+  <script src="js/brasoes-08.js"></script>
+  <script src="js/brasoes-09.js"></script>
+  <script src="js/brasoes-10.js"></script>
+  <script src="js/escolas.js"></script>
+  <script src="js/formacoes.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
