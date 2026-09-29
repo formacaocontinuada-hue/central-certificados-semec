@@ -18,6 +18,9 @@
 
   <button type="button" id="ping" disabled>Testar conexão</button>
   <button type="button" id="unidade" disabled>Identificar unidade</button>
+  <button type="button" id="listar" disabled>Listar certificados</button>
+  <input id="buscaNome" type="search" placeholder="Nome do servidor" style="padding:12px 10px;min-width:220px;margin-right:8px">
+  <button type="button" id="buscar" disabled>Buscar certificados</button>
   <a class="button" id="abrirBackend" target="_blank" rel="noopener"
      href="https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwBzokI4suZwZmEOJilCJ2N6y7PfWEH26hlJaYdfqCYb6m6VO7JK_-ktGwMlO2MYus/exec?modo=diagnostico">
     Abrir diagnóstico do backend
@@ -38,6 +41,9 @@
       const saida = document.getElementById('saida');
       const ping = document.getElementById('ping');
       const unidade = document.getElementById('unidade');
+      const listar = document.getElementById('listar');
+      const buscar = document.getElementById('buscar');
+      const buscaNome = document.getElementById('buscaNome');
 
       let bridgePort = null;
       const pendentes = new Set();
@@ -60,9 +66,11 @@
         saida.textContent = 'Bridge pronto. Pode testar.' + (versao ? '\nVersão: ' + versao : '');
         ping.disabled = false;
         unidade.disabled = false;
+        listar.disabled = false;
+        buscar.disabled = false;
       }
 
-      function enviar(acao) {
+      function enviar(acao, dados = {}) {
         if (!bridgePort) {
           saida.textContent = 'A ponte ainda não está pronta.';
           return;
@@ -76,7 +84,7 @@
           canal: 'CENTRAL_CERTIFICADOS_SEMEC',
           requestId,
           acao,
-          dados: {}
+          dados
         });
       }
 
@@ -104,6 +112,8 @@
 
       ping.addEventListener('click', () => enviar('PING'));
       unidade.addEventListener('click', () => enviar('IDENTIFICAR_UNIDADE'));
+      listar.addEventListener('click', () => enviar('LISTAR_CERTIFICADOS', { ano: '2026' }));
+      buscar.addEventListener('click', () => enviar('BUSCAR_CERTIFICADOS', { busca: buscaNome.value, ano: '2026' }));
     })();
   </script>
 </body>
