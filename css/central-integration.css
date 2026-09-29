@@ -22,6 +22,18 @@
   display: none !important;
 }
 
+.central-action-message {
+  padding: 10px 12px;
+  border: 1px solid rgba(192, 61, 61, 0.35);
+  border-radius: 8px;
+  background: rgba(192, 61, 61, 0.08);
+  color: #8b2020 !important;
+}
+
+.central-action-message[hidden] {
+  display: none !important;
+}
+
 .central-integration-status__dot {
   width: 12px;
   height: 12px;

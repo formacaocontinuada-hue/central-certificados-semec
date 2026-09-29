@@ -5,6 +5,9 @@ Esta versão mantém o visual aprovado da Área da Escola, os brasões já dispo
 - Identificação automática da unidade e do perfil de acesso pelo Bridge.
 - Listagem e pesquisa no `REGISTRO_CERTIFICADOS_2026`.
 - Abertura e download do PDF quando o registro oficial fornece o link.
+- Envio confirmado por e-mail, com anexo quando disponível e auditoria no backend.
+- Histórico de envios com destinatário mascarado na interface.
+- Solicitações de reparo com protocolo e acompanhamento de status.
 - Estados reais de carregamento, lista vazia, erro e nova tentativa.
 - A antiga tela técnica permanece disponível em `teste-backend.html`.
 
@@ -66,3 +69,5 @@ Páginas de acompanhamento:
 - `solicitacoes-reparo.html`
 
 O botão `Sair` usa a mesma confirmação visual do Portal e encerra a visualização local no navegador. A autenticação institucional continua sendo controlada pela conta Google reconhecida pelo backend.
+
+Os fluxos de envio, histórico e reparo exigem a implantação da etapa de ações no mesmo Web App do Apps Script. O pacote correspondente fica fora do conteúdo público do GitHub Pages para não expor a implementação interna do backend.
