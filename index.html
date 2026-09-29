@@ -6,17 +6,22 @@
   <title>Teste Bridge — Central de Certificados</title>
   <style>
     body { font-family: Arial, sans-serif; max-width: 860px; margin: 40px auto; padding: 0 20px; }
-    button { padding: 12px 16px; margin-right: 8px; cursor: pointer; }
+    button, a.button { padding: 12px 16px; margin: 0 8px 8px 0; cursor: pointer; display: inline-block; }
+    a.button { border: 1px solid #aaa; color: #111; text-decoration: none; background: #fff; }
     pre { background: #f5f7fa; padding: 16px; border-radius: 8px; white-space: pre-wrap; }
     iframe { width: 1px; height: 1px; border: 0; position: absolute; left: -9999px; }
   </style>
 </head>
 <body>
   <h1>Teste de comunicação GitHub → Apps Script</h1>
-  <p>Esta página serve apenas para validar a ponte técnica antes de ligarmos a interface oficial.</p>
+  <p>Esta página valida a ponte técnica antes de ligarmos a interface oficial.</p>
 
   <button type="button" id="ping" disabled>Testar conexão</button>
   <button type="button" id="unidade" disabled>Identificar unidade</button>
+  <a class="button" id="abrirBackend" target="_blank" rel="noopener"
+     href="https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwBzokI4suZwZmEOJilCJ2N6y7PfWEH26hlJaYdfqCYb6m6VO7JK_-ktGwMlO2MYus/exec?modo=diagnostico">
+    Abrir diagnóstico do backend
+  </a>
 
   <pre id="saida">Aguardando o backend...</pre>
 
@@ -30,54 +35,72 @@
     (() => {
       'use strict';
 
-      const WEBAPP_ORIGIN = 'https://script.google.com';
-      const iframe = document.getElementById('bridge');
       const saida = document.getElementById('saida');
       const ping = document.getElementById('ping');
       const unidade = document.getElementById('unidade');
-      const pendentes = new Map();
+
+      let bridgePort = null;
+      const pendentes = new Set();
 
       function id() {
         return 'req_' + Date.now() + '_' + Math.random().toString(36).slice(2);
       }
 
-      function enviar(acao) {
-        const requestId = id();
+      function habilitar(port, versao) {
+        bridgePort = port;
+        bridgePort.start?.();
 
-        saida.textContent = 'Consultando ' + acao + '...';
+        bridgePort.onmessage = (event) => {
+          const msg = event.data || {};
+          if (!msg.requestId || !pendentes.has(msg.requestId)) return;
+          pendentes.delete(msg.requestId);
+          saida.textContent = JSON.stringify(msg, null, 2);
+        };
 
-        pendentes.set(requestId, true);
-
-        iframe.contentWindow.postMessage(
-          {
-            canal: 'CENTRAL_CERTIFICADOS_SEMEC',
-            requestId,
-            acao,
-            dados: {}
-          },
-          WEBAPP_ORIGIN
-        );
+        saida.textContent = 'Bridge pronto. Pode testar.' + (versao ? '\nVersão: ' + versao : '');
+        ping.disabled = false;
+        unidade.disabled = false;
       }
 
-      window.addEventListener('message', (event) => {
-        if (!event.origin.includes('google')) return;
-
-        const msg = event.data || {};
-
-        if (msg.canal !== 'CENTRAL_CERTIFICADOS_SEMEC') return;
-
-        if (msg.tipo === 'BRIDGE_READY') {
-          saida.textContent = 'Bridge pronto. Pode testar.';
-          ping.disabled = false;
-          unidade.disabled = false;
+      function enviar(acao) {
+        if (!bridgePort) {
+          saida.textContent = 'A ponte ainda não está pronta.';
           return;
         }
 
-        if (!msg.requestId || !pendentes.has(msg.requestId)) return;
+        const requestId = id();
+        pendentes.add(requestId);
+        saida.textContent = 'Consultando ' + acao + '...';
 
-        pendentes.delete(msg.requestId);
-        saida.textContent = JSON.stringify(msg, null, 2);
+        bridgePort.postMessage({
+          canal: 'CENTRAL_CERTIFICADOS_SEMEC',
+          requestId,
+          acao,
+          dados: {}
+        });
+      }
+
+      window.addEventListener('message', (event) => {
+        const msg = event.data || {};
+        if (msg.canal !== 'CENTRAL_CERTIFICADOS_SEMEC' || msg.tipo !== 'BRIDGE_READY') return;
+
+        const port = event.ports && event.ports[0];
+        if (!port) {
+          saida.textContent = 'O backend respondeu, mas não entregou o canal de comunicação.';
+          return;
+        }
+
+        habilitar(port, msg.versaoBridge || '');
       });
+
+      window.setTimeout(() => {
+        if (!bridgePort) {
+          saida.textContent =
+            'O backend não concluiu a ponte.\n' +
+            'Clique em “Abrir diagnóstico do backend”. Se o diagnóstico abrir normalmente, ' +
+            'o problema está na ponte incorporada e não na implantação.';
+        }
+      }, 7000);
 
       ping.addEventListener('click', () => enviar('PING'));
       unidade.addEventListener('click', () => enviar('IDENTIFICAR_UNIDADE'));
