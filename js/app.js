@@ -5470,6 +5470,34 @@
    * ===================================================== */
 
 
+  const escaparHtmlFrontend = (
+    valor = ''
+  ) =>
+    String(
+      valor
+    )
+      .replace(
+        /&/g,
+        '&amp;'
+      )
+      .replace(
+        /</g,
+        '&lt;'
+      )
+      .replace(
+        />/g,
+        '&gt;'
+      )
+      .replace(
+        /"/g,
+        '&quot;'
+      )
+      .replace(
+        /'/g,
+        '&#39;'
+      );
+
+
   const atualizarReparoParaAnalise =
     async (
       solicitacao,
@@ -5628,12 +5656,12 @@
       html:
         '<form class="school-dialog-form" data-repair-admin-form>' +
           '<p><strong>Servidor(a):</strong> ' +
-            escaparHtml_(
+            escaparHtmlFrontend(
               solicitacao.nome
             ) +
           '</p>' +
           '<p><strong>Protocolo:</strong> ' +
-            escaparHtml_(
+            escaparHtmlFrontend(
               solicitacao.id
             ) +
           '</p>' +
@@ -5767,7 +5795,7 @@
               html:
                 '<p>A atualização foi registrada e já está disponível para a unidade solicitante.</p>' +
                 '<p><strong>Protocolo:</strong> ' +
-                  escaparHtml_(
+                  escaparHtmlFrontend(
                     result.idSolicitacao ||
                     solicitacao.id
                   ) +
