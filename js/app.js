@@ -1114,24 +1114,70 @@
     });
   };
 
+  const abrirCertificadoComAuditoria = async (certificado, acao) => {
+    if (!certificado?.id || !backend) return;
+
+    // A aba é aberta imediatamente para manter o gesto do usuário e evitar
+    // bloqueio de pop-up. O backend registra a ação antes de liberar o arquivo.
+    const popup = window.open('about:blank', '_blank');
+
+    try {
+      const result = extrairResultado(await backend.request('REGISTRAR_ACESSO_CERTIFICADO', {
+        idCertificado: certificado.id,
+        acao
+      }));
+
+      const fallback = acao === 'BAIXAR_PDF'
+        ? certificado.downloadUrl
+        : certificado.visualizacaoUrl;
+
+      const url = urlSegura(result.url || fallback);
+
+      if (!url) {
+        throw new Error('O arquivo oficial não está disponível para esta ação.');
+      }
+
+      if (popup && !popup.closed) {
+        popup.location.replace(url);
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      if (popup && !popup.closed) popup.close();
+
+      openDialog({
+        kicker: 'Registro de acesso',
+        title: 'Não foi possível abrir o certificado',
+        html: '<p data-access-error-message></p>',
+        actions: '<button class="server-button server-button--primary" type="button" data-modal-close>Entendi</button>'
+      });
+
+      const message = dialogBody?.querySelector('[data-access-error-message]');
+      if (message) {
+        message.textContent = error.message || 'Não foi possível registrar o acesso ao certificado.';
+      }
+    }
+  };
+
   document.addEventListener('click', (event) => {
     const viewButton = event.target.closest('[data-certificate-view]');
     if (viewButton) {
-      const url = urlSegura(viewButton.dataset.certificateView);
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      const certificado = Array.from(certificadosPorId.values()).find(
+        item => item.visualizacaoUrl === String(viewButton.dataset.certificateView || '')
+      );
+      if (certificado) {
+        abrirCertificadoComAuditoria(certificado, 'VISUALIZAR');
+      }
       return;
     }
 
     const downloadButton = event.target.closest('[data-certificate-download]');
     if (downloadButton) {
-      const url = urlSegura(downloadButton.dataset.certificateDownload);
-      if (url) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.download = '';
-        link.click();
+      const certificado = Array.from(certificadosPorId.values()).find(
+        item => item.downloadUrl === String(downloadButton.dataset.certificateDownload || '')
+      );
+      if (certificado) {
+        abrirCertificadoComAuditoria(certificado, 'BAIXAR_PDF');
       }
       return;
     }
