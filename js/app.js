@@ -5110,7 +5110,8 @@
   const abrirCertificadoComAuditoria =
     async (
       certificado,
-      acao
+      acao,
+      botaoAcao = null
     ) => {
 
       if (
@@ -5124,6 +5125,101 @@
       const ehDownload =
         acao ===
         'BAIXAR_PDF';
+
+
+      /*
+       * Feedback visual do download.
+       *
+       * O botão muda de aparência imediatamente,
+       * fica temporariamente desabilitado e informa
+       * cada etapa sem tirar o usuário da Central.
+       */
+
+      let estadoOriginalBotao =
+        null;
+
+
+      const restaurarBotaoDownload =
+        () => {
+
+          if (
+            !ehDownload ||
+            !botaoAcao ||
+            !estadoOriginalBotao
+          ) {
+            return;
+          }
+
+
+          botaoAcao.textContent =
+            estadoOriginalBotao.texto;
+
+
+          botaoAcao.className =
+            estadoOriginalBotao.classe;
+
+
+          botaoAcao.disabled =
+            estadoOriginalBotao.disabled;
+
+
+          botaoAcao.removeAttribute(
+            'aria-busy'
+          );
+
+
+          botaoAcao.removeAttribute(
+            'aria-label'
+          );
+        };
+
+
+      if (
+        ehDownload &&
+        botaoAcao
+      ) {
+
+        estadoOriginalBotao = {
+          texto:
+            botaoAcao.textContent,
+
+          classe:
+            botaoAcao.className,
+
+          disabled:
+            botaoAcao.disabled
+        };
+
+
+        botaoAcao.disabled =
+          true;
+
+
+        botaoAcao.setAttribute(
+          'aria-busy',
+          'true'
+        );
+
+
+        botaoAcao.setAttribute(
+          'aria-label',
+          'Preparando download do certificado'
+        );
+
+
+        botaoAcao.textContent =
+          'Preparando...';
+
+
+        botaoAcao.classList.remove(
+          'server-button--ghost'
+        );
+
+
+        botaoAcao.classList.add(
+          'server-button--primary'
+        );
+      }
 
 
       /*
@@ -5270,14 +5366,74 @@
           }
 
 
+          if (
+            botaoAcao
+          ) {
+
+            botaoAcao.textContent =
+              'Baixando...';
+
+
+            botaoAcao.setAttribute(
+              'aria-label',
+              'Download do certificado iniciado'
+            );
+          }
+
+
           downloadFrame.src =
             url;
 
 
           /*
-           * O iframe precisa permanecer por alguns segundos
-           * para que o Google Drive processe a solicitação.
-           * Depois ele é removido da página.
+           * O navegador não informa quando o arquivo
+           * terminou de baixar. Portanto mostramos
+           * "Download iniciado" depois que a URL de
+           * download já foi entregue ao navegador.
+           */
+
+          window.setTimeout(
+            () => {
+
+              if (
+                botaoAcao &&
+                botaoAcao.isConnected
+              ) {
+
+                botaoAcao.textContent =
+                  'Download iniciado ✓';
+
+
+                botaoAcao.removeAttribute(
+                  'aria-busy'
+                );
+
+
+                botaoAcao.setAttribute(
+                  'aria-label',
+                  'Download do certificado iniciado'
+                );
+              }
+
+            },
+            900
+          );
+
+
+          window.setTimeout(
+            () => {
+
+              restaurarBotaoDownload();
+
+            },
+            3500
+          );
+
+
+          /*
+           * O iframe precisa permanecer por alguns
+           * segundos para que o Google Drive processe
+           * a solicitação. Depois ele é removido.
            */
 
           window.setTimeout(
@@ -5330,6 +5486,9 @@
       } catch (
         error
       ) {
+
+        restaurarBotaoDownload();
+
 
         if (
           popup &&
@@ -5485,7 +5644,8 @@
 
             abrirCertificadoComAuditoria(
               certificado,
-              'BAIXAR_PDF'
+              'BAIXAR_PDF',
+              downloadButton
             );
           }
 
