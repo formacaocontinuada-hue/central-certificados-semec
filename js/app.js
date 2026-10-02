@@ -8,7 +8,7 @@
 
   const portalMainLogo =
     new URL(
-      'assets/brasao-portal-semec.svg',
+      'assents/sem_fundo/brasao_portal_semec.png',
       window.location.href
     ).href;
 
