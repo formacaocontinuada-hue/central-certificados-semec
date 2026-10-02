@@ -71,3 +71,13 @@ Páginas de acompanhamento:
 O botão `Sair` usa a mesma confirmação visual do Portal e encerra a visualização local no navegador. A autenticação institucional continua sendo controlada pela conta Google reconhecida pelo backend.
 
 Os fluxos de envio, histórico e reparo exigem a implantação da etapa de ações no mesmo Web App do Apps Script. O pacote correspondente fica fora do conteúdo público do GitHub Pages para não expor a implementação interna do backend.
+
+
+## Validador público
+A página `validar-certificado.html` consulta o registro oficial por meio de um Web App público separado do backend institucional da Central.
+
+- Configuração do endpoint em `js/validator-config.js`.
+- Validação exige `ID_CERTIFICADO` + código de autenticidade completo.
+- A resposta pública não expõe CPF, matrícula, e-mail, ID_SRV, ID do Drive, observações internas ou o hash completo.
+- Estados tratados na interface: válido, substituído, cancelado, inativo, inválido e erro.
+- A URL pública usada nos QR Codes permanece a do GitHub Pages; o Web App pode ser trocado internamente sem reemitir os certificados.
