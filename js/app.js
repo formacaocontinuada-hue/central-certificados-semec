@@ -1,14 +1,35 @@
 (() => {
   'use strict';
 
-  const centralMainLogo = (window.CENTRAL_LOGOS && window.CENTRAL_LOGOS.MUNICIPIO) || '';
+  const municipioMainLogo =
+    (window.CENTRAL_LOGOS &&
+      window.CENTRAL_LOGOS.MUNICIPIO) ||
+    '';
+
+  const portalMainLogo =
+    new URL(
+      'assets/brasao-portal-semec.svg',
+      window.location.href
+    ).href;
+
+  const centralMainLogo =
+    portalMainLogo ||
+    municipioMainLogo;
 
   if (centralMainLogo) {
     document
-      .querySelectorAll('[data-central-main-logo]')
-      .forEach((img) => {
-        img.src = centralMainLogo;
-      });
+      .querySelectorAll(
+        '[data-central-main-logo]'
+      )
+      .forEach(
+        (img) => {
+          img.src =
+            centralMainLogo;
+
+          img.alt =
+            'Brasão do Portal SEMEC';
+        }
+      );
   }
 
   const menuToggle =
@@ -187,8 +208,12 @@
 
 
     const brasao =
-      escolaCatalogada?.brasao ||
-      centralMainLogo;
+      tipo === 'SEMEC'
+        ? centralMainLogo
+        : (
+            escolaCatalogada?.brasao ||
+            municipioMainLogo
+          );
 
 
     document
@@ -246,15 +271,19 @@
 
 
     const textoAltBrasao =
-      indigena &&
-      !possuiBrasaoProprio
-        ? (
-            'Identidade da Educação Escolar Indígena — ' +
-            nome
-          )
+      tipo === 'SEMEC'
+        ? 'Brasão do Portal SEMEC'
         : (
-            'Brasão de ' +
-            nome
+            indigena &&
+            !possuiBrasaoProprio
+              ? (
+                  'Identidade da Educação Escolar Indígena — ' +
+                  nome
+                )
+              : (
+                  'Brasão de ' +
+                  nome
+                )
           );
 
 
@@ -280,18 +309,18 @@
 
 
               img.src =
-                indigena
-                  ? (
-                      window.CENTRAL_LOGOS &&
-                      window.CENTRAL_LOGOS
-                        .INDIGENA
-                    ) || ''
-
+                tipo === 'SEMEC'
+                  ? centralMainLogo
                   : (
-                      window.CENTRAL_LOGOS &&
-                      window.CENTRAL_LOGOS
-                        .MUNICIPIO
-                    ) || '';
+                      indigena
+                        ? (
+                            window.CENTRAL_LOGOS &&
+                            window.CENTRAL_LOGOS
+                              .INDIGENA
+                          ) || ''
+
+                        : municipioMainLogo
+                    );
             };
         }
       );
