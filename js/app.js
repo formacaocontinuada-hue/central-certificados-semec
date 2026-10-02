@@ -5366,58 +5366,37 @@
           }
 
 
-          if (
-            botaoAcao
-          ) {
-
-            botaoAcao.textContent =
-              'Baixando...';
-
-
-            botaoAcao.setAttribute(
-              'aria-label',
-              'Download do certificado iniciado'
-            );
-          }
-
-
           downloadFrame.src =
             url;
 
 
           /*
-           * O navegador não informa quando o arquivo
-           * terminou de baixar. Portanto mostramos
-           * "Download iniciado" depois que a URL de
-           * download já foi entregue ao navegador.
+           * Neste ponto a URL de download já foi entregue
+           * ao navegador. Como o Google Drive não informa
+           * ao JavaScript o instante exato em que o arquivo
+           * começa ou termina de baixar, mostramos apenas
+           * um estado que podemos confirmar com precisão.
            */
 
-          window.setTimeout(
-            () => {
+          if (
+            botaoAcao &&
+            botaoAcao.isConnected
+          ) {
 
-              if (
-                botaoAcao &&
-                botaoAcao.isConnected
-              ) {
-
-                botaoAcao.textContent =
-                  'Download iniciado ✓';
+            botaoAcao.textContent =
+              'Download solicitado ✓';
 
 
-                botaoAcao.removeAttribute(
-                  'aria-busy'
-                );
+            botaoAcao.removeAttribute(
+              'aria-busy'
+            );
 
 
-                botaoAcao.setAttribute(
-                  'aria-label',
-                  'Download do certificado iniciado'
-                );
-              }
-
-            },
-            900
-          );
+            botaoAcao.setAttribute(
+              'aria-label',
+              'Download do certificado solicitado'
+            );
+          }
 
 
           window.setTimeout(
@@ -5426,7 +5405,7 @@
               restaurarBotaoDownload();
 
             },
-            3500
+            2800
           );
 
 
