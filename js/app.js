@@ -5121,24 +5121,64 @@
       }
 
 
+      const ehDownload =
+        acao ===
+        'BAIXAR_PDF';
+
+
       /*
-       * A aba temporária é aberta imediatamente
-       * para preservar o gesto do clique e evitar
-       * o bloqueio de pop-up pelo navegador.
+       * VISUALIZAR:
+       * abre uma nova aba imediatamente para preservar
+       * o gesto do clique e evitar bloqueio de pop-up.
+       *
+       * BAIXAR PDF:
+       * não abre aba. Prepara um iframe invisível na
+       * própria Central para receber a URL de download
+       * depois que a auditoria for registrada.
        */
 
       const popup =
-        window.open(
-          'about:blank',
-          '_blank'
+        ehDownload
+          ? null
+          : window.open(
+              'about:blank',
+              '_blank'
+            );
+
+
+      const downloadFrame =
+        ehDownload
+          ? document.createElement(
+              'iframe'
+            )
+          : null;
+
+
+      if (
+        downloadFrame
+      ) {
+
+        downloadFrame.hidden =
+          true;
+
+
+        downloadFrame.setAttribute(
+          'aria-hidden',
+          'true'
         );
 
 
-      /*
-       * Enquanto o backend registra a auditoria,
-       * deixamos uma mensagem simples na aba
-       * temporária.
-       */
+        downloadFrame.setAttribute(
+          'title',
+          'Download de certificado'
+        );
+
+
+        document.body.appendChild(
+          downloadFrame
+        );
+      }
+
 
       if (
         popup &&
@@ -5148,21 +5188,14 @@
         try {
 
           popup.document.title =
-            acao ===
-              'BAIXAR_PDF'
-              ? 'Preparando download'
-              : 'Abrindo certificado';
+            'Abrindo certificado';
 
 
           popup.document.body.innerHTML =
-            acao ===
-              'BAIXAR_PDF'
-
-              ? '<p style="font-family:Arial,sans-serif;padding:24px;">Preparando o download do certificado...</p>'
-
-              : '<p style="font-family:Arial,sans-serif;padding:24px;">Abrindo certificado...</p>';
+            '<p style="font-family:Arial,sans-serif;padding:24px;">Abrindo certificado...</p>';
 
         } catch (_) {
+
           /*
            * Não interfere no fluxo principal.
            */
@@ -5189,8 +5222,7 @@
 
 
         const fallback =
-          acao ===
-            'BAIXAR_PDF'
+          ehDownload
 
             ? certificado
                 .downloadUrl
@@ -5219,103 +5251,52 @@
         /*
          * BAIXAR PDF
          *
-         * O backend devolve uma URL própria de
-         * download do Google Drive.
-         *
-         * A aba temporária aciona o download
-         * e é fechada automaticamente.
+         * O download é disparado dentro de um iframe
+         * invisível. Assim a Central permanece na mesma
+         * página e nenhuma nova aba é aberta.
          */
 
         if (
-          acao ===
-          'BAIXAR_PDF'
+          ehDownload
         ) {
 
           if (
-            popup &&
-            !popup.closed
+            !downloadFrame
           ) {
 
-            popup.location.replace(
-              url
-            );
-
-
-            /*
-             * O navegador não informa ao JavaScript
-             * quando o último byte terminou de baixar.
-             *
-             * Portanto fechamos somente depois de dar
-             * tempo suficiente para o Google Drive
-             * receber e iniciar a solicitação.
-             */
-
-            window.setTimeout(
-              () => {
-
-                try {
-
-                  if (
-                    popup &&
-                    !popup.closed
-                  ) {
-                    popup.close();
-                  }
-
-                } catch (_) {
-                  /*
-                   * Não interfere no download.
-                   */
-                }
-
-              },
-              4000
-            );
-
-          } else {
-
-            /*
-             * Caso excepcional em que o navegador
-             * bloqueie a aba inicial.
-             *
-             * Tentamos disparar o download por uma
-             * estrutura temporária na própria página.
-             */
-
-            const iframe =
-              document.createElement(
-                'iframe'
-              );
-
-
-            iframe.hidden =
-              true;
-
-
-            iframe.setAttribute(
-              'aria-hidden',
-              'true'
-            );
-
-
-            iframe.src =
-              url;
-
-
-            document.body.appendChild(
-              iframe
-            );
-
-
-            window.setTimeout(
-              () => {
-
-                iframe.remove();
-
-              },
-              10000
+            throw new Error(
+              'Não foi possível preparar o download do certificado.'
             );
           }
+
+
+          downloadFrame.src =
+            url;
+
+
+          /*
+           * O iframe precisa permanecer por alguns segundos
+           * para que o Google Drive processe a solicitação.
+           * Depois ele é removido da página.
+           */
+
+          window.setTimeout(
+            () => {
+
+              try {
+
+                downloadFrame.remove();
+
+              } catch (_) {
+
+                /*
+                 * Não interfere no download.
+                 */
+              }
+
+            },
+            30000
+          );
 
 
           return;
@@ -5325,8 +5306,7 @@
         /*
          * VISUALIZAR
          *
-         * A nova aba permanece aberta para que
-         * o usuário possa consultar o PDF.
+         * A nova aba permanece aberta para consulta.
          */
 
         if (
@@ -5360,13 +5340,32 @@
         }
 
 
+        if (
+          downloadFrame
+        ) {
+
+          try {
+
+            downloadFrame.remove();
+
+          } catch (_) {
+
+            /*
+             * Não interfere no tratamento do erro.
+             */
+          }
+        }
+
+
         openDialog({
 
           kicker:
             'Registro de acesso',
 
           title:
-            'Não foi possível abrir o certificado',
+            ehDownload
+              ? 'Não foi possível baixar o certificado'
+              : 'Não foi possível abrir o certificado',
 
           html:
             '<p data-access-error-message></p>',
@@ -5389,7 +5388,11 @@
 
           message.textContent =
             error.message ||
-            'Não foi possível registrar o acesso ao certificado.';
+            (
+              ehDownload
+                ? 'Não foi possível iniciar o download do certificado.'
+                : 'Não foi possível registrar o acesso ao certificado.'
+            );
         }
       }
     };
