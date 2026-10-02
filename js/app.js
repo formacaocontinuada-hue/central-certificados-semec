@@ -2998,6 +2998,26 @@
       ).trim(),
 
 
+    idUnidadeSolicitante:
+      String(
+        primeiroValor(
+          registro,
+          'idUnidadeSolicitante',
+          'idEscolaSolicitante'
+        ) || ''
+      ).trim(),
+
+
+    unidadeSolicitante:
+      String(
+        primeiroValor(
+          registro,
+          'unidadeSolicitante',
+          'escolaSolicitante'
+        ) || ''
+      ).trim(),
+
+
     categoria:
       String(
         primeiroValor(
@@ -3023,7 +3043,7 @@
           registro,
           'status'
         ) ||
-        'EM_ANALISE'
+        'RECEBIDA'
       ).trim(),
 
 
@@ -3033,7 +3053,7 @@
           registro,
           'status'
         ) ||
-        'EM_ANALISE'
+        'RECEBIDA'
       ),
 
 
@@ -3041,7 +3061,8 @@
       String(
         primeiroValor(
           registro,
-          'resposta'
+          'resposta',
+          'respostaSemec'
         ) || ''
       ).trim(),
 
@@ -3050,7 +3071,36 @@
       String(
         primeiroValor(
           registro,
-          'dataAtualizacao'
+          'dataAtualizacao',
+          'atualizadoEm'
+        ) || ''
+      ).trim(),
+
+
+    dataResolucao:
+      String(
+        primeiroValor(
+          registro,
+          'dataResolucao',
+          'resolvidoEm'
+        ) || ''
+      ).trim(),
+
+
+    atualizadoPor:
+      String(
+        primeiroValor(
+          registro,
+          'atualizadoPor'
+        ) || ''
+      ).trim(),
+
+
+    resolvidoPor:
+      String(
+        primeiroValor(
+          registro,
+          'resolvidoPor'
         ) || ''
       ).trim()
   });
@@ -3154,7 +3204,10 @@
 
 
   const criarLinhaSolicitacao = (
-    solicitacao
+    solicitacao,
+    {
+      administrativo = false
+    } = {}
   ) => {
 
     const article =
@@ -3209,6 +3262,46 @@
       'school-detail-list';
 
 
+    if (
+      administrativo &&
+      solicitacao.unidadeSolicitante
+    ) {
+
+      adicionarDetalhe(
+        details,
+        'Unidade solicitante',
+        solicitacao
+          .unidadeSolicitante
+      );
+    }
+
+
+    if (
+      administrativo
+    ) {
+
+      adicionarDetalhe(
+        details,
+        'Formação',
+        solicitacao
+          .formacao
+      );
+
+
+      if (
+        solicitacao.escola
+      ) {
+
+        adicionarDetalhe(
+          details,
+          'Unidade do certificado',
+          solicitacao
+            .escola
+        );
+      }
+    }
+
+
     adicionarDetalhe(
       details,
       'Categoria',
@@ -3244,6 +3337,34 @@
 
 
     if (
+      solicitacao.dataAtualizacao &&
+      solicitacao.dataAtualizacao !==
+        solicitacao.dataHora
+    ) {
+
+      adicionarDetalhe(
+        details,
+        'Última atualização',
+        solicitacao
+          .dataAtualizacao
+      );
+    }
+
+
+    if (
+      solicitacao.dataResolucao
+    ) {
+
+      adicionarDetalhe(
+        details,
+        'Resolvida em',
+        solicitacao
+          .dataResolucao
+      );
+    }
+
+
+    if (
       solicitacao.resposta
     ) {
 
@@ -3260,6 +3381,160 @@
       title,
       details
     );
+
+
+    const perfilSemec =
+      String(
+        document.body
+          .dataset
+          .perfilAcesso ||
+        ''
+      )
+        .toLocaleUpperCase(
+          'pt-BR'
+        ) ===
+      'SEMEC';
+
+
+    if (
+      administrativo &&
+      perfilSemec
+    ) {
+
+      const status =
+        chaveCanonica(
+          solicitacao
+            .statusOriginal
+        );
+
+
+      const actions =
+        document.createElement(
+          'div'
+        );
+
+
+      actions.className =
+        'school-table-actions';
+
+
+      if (
+        status ===
+        'recebida'
+      ) {
+
+        const analisarButton =
+          document.createElement(
+            'button'
+          );
+
+
+        analisarButton.type =
+          'button';
+
+
+        analisarButton.className =
+          'server-button server-button--primary';
+
+
+        analisarButton.textContent =
+          'Iniciar análise';
+
+
+        analisarButton.dataset
+          .repairAdminAction =
+            'EM_ANALISE';
+
+
+        analisarButton.dataset
+          .repairAdminId =
+            solicitacao.id;
+
+
+        actions.appendChild(
+          analisarButton
+        );
+      }
+
+
+      if (
+        status ===
+        'emanalise'
+      ) {
+
+        const corrigidaButton =
+          document.createElement(
+            'button'
+          );
+
+
+        corrigidaButton.type =
+          'button';
+
+
+        corrigidaButton.className =
+          'server-button server-button--primary';
+
+
+        corrigidaButton.textContent =
+          'Marcar como corrigida';
+
+
+        corrigidaButton.dataset
+          .repairAdminAction =
+            'CORRIGIDA';
+
+
+        corrigidaButton.dataset
+          .repairAdminId =
+            solicitacao.id;
+
+
+        const naoProcedeButton =
+          document.createElement(
+            'button'
+          );
+
+
+        naoProcedeButton.type =
+          'button';
+
+
+        naoProcedeButton.className =
+          'server-button server-button--ghost';
+
+
+        naoProcedeButton.textContent =
+          'Não procede';
+
+
+        naoProcedeButton.dataset
+          .repairAdminAction =
+            'NAO_PROCEDE';
+
+
+        naoProcedeButton.dataset
+          .repairAdminId =
+            solicitacao.id;
+
+
+        actions.append(
+          corrigidaButton,
+          naoProcedeButton
+        );
+      }
+
+
+      if (
+        actions.childElementCount >
+        0
+      ) {
+
+        article.appendChild(
+          actions
+        );
+      }
+    }
 
 
     return article;
@@ -3292,13 +3567,27 @@
 
     const linhasPagina =
       solicitacoes.map(
-        criarLinhaSolicitacao
+        item =>
+          criarLinhaSolicitacao(
+            item,
+            {
+              administrativo:
+                true
+            }
+          )
       );
 
 
     const linhasResumo =
       solicitacoes.map(
-        criarLinhaSolicitacao
+        item =>
+          criarLinhaSolicitacao(
+            item,
+            {
+              administrativo:
+                false
+            }
+          )
       );
 
 
@@ -3865,6 +4154,51 @@
       renderizarSolicitacoes(
         solicitacoesAtuais
       );
+
+
+      if (
+        String(
+          result.perfilAcesso ||
+          document.body
+            .dataset
+            .perfilAcesso ||
+          ''
+        )
+          .toLocaleUpperCase(
+            'pt-BR'
+          ) ===
+        'SEMEC'
+      ) {
+
+        const heading =
+          document.querySelector(
+            '.school-page-heading--training h2'
+          );
+
+
+        const description =
+          document.querySelector(
+            '.school-page-heading--training h2 + p'
+          );
+
+
+        if (
+          heading
+        ) {
+
+          heading.textContent =
+            'Tratamento de solicitações de reparo';
+        }
+
+
+        if (
+          description
+        ) {
+
+          description.textContent =
+            'Analise as solicitações recebidas, registre a resposta da SEMEC e acompanhe a conclusão dos reparos.';
+        }
+      }
 
 
       atualizarContagemNomeada(
@@ -5132,6 +5466,351 @@
 
 
   /* =====================================================
+   * TRATAMENTO DE REPAROS PELA SEMEC
+   * ===================================================== */
+
+
+  const atualizarReparoParaAnalise =
+    async (
+      solicitacao,
+      button
+    ) => {
+
+      if (
+        !solicitacao?.id ||
+        !backend
+      ) {
+        return;
+      }
+
+
+      const textoOriginal =
+        button?.textContent ||
+        'Iniciar análise';
+
+
+      if (
+        button
+      ) {
+
+        button.disabled =
+          true;
+
+
+        button.textContent =
+          'Iniciando...';
+      }
+
+
+      try {
+
+        const result =
+          extrairResultado(
+
+            await backend.request(
+              'ATUALIZAR_SOLICITACAO_REPARO',
+              {
+                idSolicitacao:
+                  solicitacao.id,
+
+                status:
+                  'EM_ANALISE'
+              }
+            )
+          );
+
+
+        await carregarSolicitacoesReparo({
+          silencioso:
+            true
+        });
+
+
+        definirStatus(
+          'ready',
+          'Solicitação em análise',
+          'O protocolo ' +
+            solicitacao.id +
+            ' foi colocado em análise pela SEMEC.'
+        );
+
+
+        return result;
+
+      } catch (
+        error
+      ) {
+
+        if (
+          button
+        ) {
+
+          button.disabled =
+            false;
+
+
+          button.textContent =
+            textoOriginal;
+        }
+
+
+        openDialog({
+
+          kicker:
+            'Tratamento de reparo',
+
+          title:
+            'Não foi possível iniciar a análise',
+
+          html:
+            '<p data-access-error-message></p>',
+
+          actions:
+            '<button class="server-button server-button--primary" type="button" data-modal-close>Entendi</button>'
+        });
+
+
+        const message =
+          dialogBody
+            ?.querySelector(
+              '[data-access-error-message]'
+            );
+
+
+        if (
+          message
+        ) {
+
+          message.textContent =
+            error.message ||
+            'Não foi possível atualizar a solicitação.';
+        }
+      }
+    };
+
+
+  const abrirDialogoConclusaoReparo = (
+    solicitacao,
+    novoStatus
+  ) => {
+
+    const corrigida =
+      novoStatus ===
+      'CORRIGIDA';
+
+
+    const titulo =
+      corrigida
+        ? 'Concluir como corrigida'
+        : 'Marcar como não procede';
+
+
+    const descricao =
+      corrigida
+        ? 'Registre uma resposta objetiva informando o que foi corrigido. Esta resposta ficará visível para a unidade solicitante.'
+        : 'Registre uma resposta objetiva explicando por que a solicitação não procede. Esta resposta ficará visível para a unidade solicitante.';
+
+
+    const textoBotao =
+      corrigida
+        ? 'Confirmar correção'
+        : 'Confirmar não procede';
+
+
+    openDialog({
+
+      kicker:
+        'Tratamento de reparo',
+
+      title:
+        titulo,
+
+      html:
+        '<form class="school-dialog-form" data-repair-admin-form>' +
+          '<p><strong>Servidor(a):</strong> ' +
+            escaparHtml_(
+              solicitacao.nome
+            ) +
+          '</p>' +
+          '<p><strong>Protocolo:</strong> ' +
+            escaparHtml_(
+              solicitacao.id
+            ) +
+          '</p>' +
+          '<p>' +
+            descricao +
+          '</p>' +
+          '<label>' +
+            '<span>Resposta da SEMEC</span>' +
+            '<textarea name="resposta" required minlength="10" maxlength="1500" placeholder="Escreva a resposta que ficará disponível para a unidade"></textarea>' +
+          '</label>' +
+          '<p class="central-action-message" role="alert" data-action-error hidden></p>' +
+        '</form>',
+
+      actions:
+        '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button>' +
+        '<button class="server-button server-button--primary" type="button" data-submit-repair-admin>' +
+          textoBotao +
+        '</button>'
+    });
+
+
+    const form =
+      dialogBody
+        ?.querySelector(
+          '[data-repair-admin-form]'
+        );
+
+
+    const submit =
+      dialogActions
+        ?.querySelector(
+          '[data-submit-repair-admin]'
+        );
+
+
+    form
+      ?.querySelector(
+        '[name="resposta"]'
+      )
+      ?.focus();
+
+
+    submit
+      ?.addEventListener(
+        'click',
+        async () => {
+
+          if (
+            !form
+              ?.reportValidity()
+          ) {
+            return;
+          }
+
+
+          const error =
+            form.querySelector(
+              '[data-action-error]'
+            );
+
+
+          if (
+            error
+          ) {
+
+            error.hidden =
+              true;
+          }
+
+
+          const data =
+            new FormData(
+              form
+            );
+
+
+          const resposta =
+            String(
+              data.get(
+                'resposta'
+              ) || ''
+            ).trim();
+
+
+          definirAcaoOcupada(
+            form,
+            submit,
+            true,
+            'Salvando...',
+            textoBotao
+          );
+
+
+          try {
+
+            const result =
+              extrairResultado(
+
+                await backend.request(
+                  'ATUALIZAR_SOLICITACAO_REPARO',
+                  {
+                    idSolicitacao:
+                      solicitacao.id,
+
+                    status:
+                      novoStatus,
+
+                    resposta:
+                      resposta
+                  }
+                )
+              );
+
+
+            await carregarSolicitacoesReparo({
+              silencioso:
+                true
+            });
+
+
+            openDialog({
+
+              kicker:
+                'Tratamento concluído',
+
+              title:
+                corrigida
+                  ? 'Solicitação corrigida'
+                  : 'Solicitação encerrada como não procede',
+
+              html:
+                '<p>A atualização foi registrada e já está disponível para a unidade solicitante.</p>' +
+                '<p><strong>Protocolo:</strong> ' +
+                  escaparHtml_(
+                    result.idSolicitacao ||
+                    solicitacao.id
+                  ) +
+                '</p>',
+
+              actions:
+                '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'
+            });
+
+
+            definirStatus(
+              'ready',
+              'Solicitação atualizada',
+              'O protocolo ' +
+                solicitacao.id +
+                ' foi encerrado pela SEMEC.'
+            );
+
+          } catch (
+            error
+          ) {
+
+            mostrarErroAcao(
+              form,
+              error.message ||
+              'Não foi possível concluir a solicitação.'
+            );
+
+
+            definirAcaoOcupada(
+              form,
+              submit,
+              false,
+              'Salvando...',
+              textoBotao
+            );
+          }
+        }
+      );
+  };
+
+
+  /* =====================================================
    * VISUALIZAR / BAIXAR COM AUDITORIA
    * ===================================================== */
 
@@ -5574,6 +6253,76 @@
     .addEventListener(
       'click',
       event => {
+
+        const repairAdminButton =
+          event.target.closest(
+            '[data-repair-admin-action]'
+          );
+
+
+        if (
+          repairAdminButton
+        ) {
+
+          const idSolicitacao =
+            String(
+              repairAdminButton
+                .dataset
+                .repairAdminId ||
+              ''
+            );
+
+
+          const novoStatus =
+            String(
+              repairAdminButton
+                .dataset
+                .repairAdminAction ||
+              ''
+            );
+
+
+          const solicitacao =
+            solicitacoesAtuais
+              .find(
+                item =>
+                  item.id ===
+                  idSolicitacao
+              );
+
+
+          if (
+            solicitacao
+          ) {
+
+            if (
+              novoStatus ===
+              'EM_ANALISE'
+            ) {
+
+              atualizarReparoParaAnalise(
+                solicitacao,
+                repairAdminButton
+              );
+
+            } else if (
+              novoStatus ===
+                'CORRIGIDA' ||
+              novoStatus ===
+                'NAO_PROCEDE'
+            ) {
+
+              abrirDialogoConclusaoReparo(
+                solicitacao,
+                novoStatus
+              );
+            }
+          }
+
+
+          return;
+        }
+
 
         const viewButton =
           event.target.closest(
