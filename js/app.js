@@ -611,9 +611,10 @@
     const status = chaveCanonica(valor);
     if (status === 'enviado') return 'Enviado';
     if (status === 'erro') return 'Falha no envio';
+    if (status === 'recebida') return 'Recebida';
     if (status === 'emanalise') return 'Em análise';
-    if (status === 'concluida' || status === 'concluido') return 'Concluída';
-    if (status === 'recusada' || status === 'indeferida') return 'Não aprovada';
+    if (status === 'corrigida' || status === 'concluida' || status === 'concluido') return 'Corrigida';
+    if (status === 'naoprocede' || status === 'recusada' || status === 'indeferida') return 'Não procede';
     return String(valor || 'Registrado').replace(/_/g, ' ');
   };
 
@@ -721,7 +722,10 @@
     if (peopleEl) peopleEl.textContent = String(uniquePeople.size);
     if (yearEl) yearEl.textContent = year;
     if (repairsEl) repairsEl.textContent = String(
-      solicitacoesAtuais.filter(item => chaveCanonica(item.statusOriginal) === 'emanalise').length
+      solicitacoesAtuais.filter(item => {
+        const status = chaveCanonica(item.statusOriginal);
+        return status === 'recebida' || status === 'emanalise';
+      }).length
     );
   };
 
@@ -1027,7 +1031,7 @@
     openDialog({
       kicker: 'Enviar certificado',
       title: certificado.nome,
-      html: '<form class="school-dialog-form" data-send-certificate-form><p>Informe o e-mail confirmado pelo servidor. O envio e a conta solicitante ficarão registrados no histórico.</p><label><span>E-mail do servidor</span><input type="email" name="emailDestino" autocomplete="email" placeholder="nome@exemplo.com" required maxlength="254"></label><label class="school-check-line"><input type="checkbox" name="confirmacao" required> Conferi o endereço e confirmo que ele pertence ao destinatário correto.</label><p class="central-action-message" role="alert" data-action-error hidden></p></form>',
+      html: '<form class="school-dialog-form" data-send-certificate-form><p>Informe o e-mail confirmado pelo servidor. O envio e a conta solicitante ficarão registrados no histórico.</p><label><span>E-mail do servidor</span><input type="email" name="emailDestino" autocomplete="email" placeholder="nome@exemplo.com" required maxlength="254"></label><label class="school-check-line"><input type="checkbox" name="confirmacao" required> Conferi o endereço e confirmo que ele pertence ao destinatário correto.</label><label class="school-check-line"><input type="checkbox" name="salvarContato"> Salvar este e-mail para facilitar futuros envios ao mesmo servidor.</label><p class="central-action-message" role="alert" data-action-error hidden></p></form>',
       actions: '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button><button class="server-button server-button--primary" type="button" data-submit-certificate-send>Confirmar envio</button>'
     });
 
@@ -1046,7 +1050,8 @@
         const result = extrairResultado(await backend.request('ENVIAR_CERTIFICADO', {
           idCertificado: certificado.id,
           emailDestino: String(data.get('emailDestino') || '').trim(),
-          confirmado: data.get('confirmacao') === 'on'
+          confirmado: data.get('confirmacao') === 'on',
+          salvarContato: data.get('salvarContato') === 'on'
         }));
         openDialog({
           kicker: 'Envio registrado',
