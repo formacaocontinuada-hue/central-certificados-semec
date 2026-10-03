@@ -2018,6 +2018,7 @@
       const message =
         response?.mensagem ||
         response?.message ||
+        response?.erro ||
         'O backend não concluiu a solicitação.';
 
 
@@ -2051,6 +2052,7 @@
         new Error(
           result.mensagem ||
           result.message ||
+          result.erro ||
           'O backend não concluiu a solicitação.'
         );
 
@@ -5344,6 +5346,14 @@
   });
   const textoReparo = valor => escaparHtmlFrontend(valor == null ? '' : valor);
 
+  // A ponte pode entregar as propriedades em outra ordem. O backend atual
+  // compara JSON em texto; use a ordem do contrato certificadoParaFrontend_.
+  const serializarCertificadoConferencia = certificado => JSON.stringify(certificado, [
+    'idCertificado', 'nomeCompleto', 'cpfMascarado', 'formacao', 'escola',
+    'cargaHoraria', 'percentual', 'ano', 'dataEmissao', 'status',
+    'urlAutenticacao', 'linkCertificado'
+  ]);
+
   const tabelaCorrecoesReparo = (correcoes, titulo) => !correcoes?.length ? '' : `
     <section><h3>${textoReparo(titulo)}</h3><div class="repair-table-scroll"><table class="repair-table">
       <thead><tr><th>Campo</th><th>Valor na emissão</th><th>Valor proposto</th></tr></thead>
@@ -5477,7 +5487,7 @@
         <section><h3>Dados para conferência</h3>
           <p>A base oficial informa os dados da emissão. Ela não comprova, por si só, a correção pedida.
           Período, encontros e assinaturas não estão estruturados nesta base; confira os documentos disponíveis ou solicite complemento.</p>
-          ${detalhe.certificadoNaSolicitacao && c && JSON.stringify(c) !== JSON.stringify(detalhe.certificadoNaSolicitacao)
+          ${detalhe.certificadoNaSolicitacao && c && serializarCertificadoConferencia(c) !== serializarCertificadoConferencia(detalhe.certificadoNaSolicitacao)
             ? '<p>O registro oficial mudou desde a abertura da solicitação. Confira os valores atuais antes de decidir.</p>' : ''}
         </section>
         ${r.status === 'APROVADA_PARA_CORRECAO' ? `<section><h3>Correção aprovada</h3>
@@ -5594,7 +5604,7 @@
         atualizacao('ATUALIZAR_SOLICITACAO_REPARO', {
           status: form.elements.status.value, resposta: form.elements.resposta.value.trim(),
           conferencia: form.elements.conferencia.value.trim(), correcoes: coletarCorrecoesReparo(form),
-          certificadoConferidoJson: JSON.stringify(c)
+          certificadoConferidoJson: serializarCertificadoConferencia(c)
         }, e.target, form);
       });
     }
