@@ -3338,12 +3338,16 @@
       'SEMEC';
 
 
-    if (administrativo) {
+    const statusReparo = String(solicitacao.statusOriginal || '').toUpperCase();
+    const encerrada = Boolean(solicitacao.dataResolucao) || ['INDEFERIDA', 'NAO_PROCEDE', 'CANCELADA', 'CORRIGIDA'].includes(statusReparo);
+    if (administrativo && (!perfilSemec || !encerrada)) {
       const actions = document.createElement('div');
       actions.className = 'school-table-actions';
       const button = document.createElement('button');
       button.type = 'button'; button.className = 'server-button server-button--primary';
-      button.textContent = perfilSemec ? 'Analisar solicitação' : 'Acompanhar solicitação';
+      button.textContent = !perfilSemec || statusReparo === 'AGUARDANDO_INFORMACAO'
+        ? 'Acompanhar solicitação'
+        : statusReparo === 'APROVADA_PARA_CORRECAO' ? 'Ver decisão' : 'Analisar solicitação';
       button.dataset.repairAdminAction = 'ABRIR'; button.dataset.repairAdminId = solicitacao.id;
       actions.append(button); article.append(actions);
     }
@@ -5371,6 +5375,7 @@
     };
     (correcoes.length ? correcoes : [{}]).forEach(adicionar);
     const wrapper = document.createElement('div');
+    wrapper.className = 'repair-corrections-editor';
     wrapper.append(container);
     const add = document.createElement('button');
     add.type = 'button'; add.className = 'server-button server-button--ghost'; add.textContent = 'Adicionar campo';
@@ -5438,7 +5443,7 @@
     const r = detalhe.solicitacao;
     const c = detalhe.certificado;
     const semec = detalhe.perfilAcesso === 'SEMEC';
-    const podeDecidir = semec && r.status === 'EM_ANALISE';
+    const podeDecidir = semec && ['NOVA', 'EM_ANALISE'].includes(r.status);
     const podeComplementar = r.status === 'AGUARDANDO_INFORMACAO' &&
       r.idUnidadeSolicitante === (detalhe.unidade?.idEscola || '');
     const podeCancelar = semec && ['NOVA', 'EM_ANALISE'].includes(r.status);
@@ -5458,7 +5463,8 @@
       <option value="AGUARDANDO_INFORMACAO">Solicitar informação complementar</option>
       <option value="INDEFERIDA">Indeferir solicitação</option>` : '';
     openDialog({kicker: `Protocolo ${r.idSolicitacao} · ${formatarStatusAcao(r.status)}`,
-      title: semec ? 'Analisar solicitação de reparo' : 'Acompanhar solicitação de reparo',
+      title: podeDecidir ? 'Analisar solicitação de reparo'
+        : semec && r.status === 'APROVADA_PARA_CORRECAO' ? 'Ver decisão da solicitação' : 'Acompanhar solicitação de reparo',
       html: `<div class="repair-analysis">
         <section><h3>Certificado relacionado</h3>${resumo}
           ${!c ? '<p role="alert">O certificado não foi localizado no registro atual. A aprovação fica bloqueada. O resumo acima, quando disponível, é o registro da abertura.</p>' : ''}
@@ -5493,7 +5499,6 @@
         <section><h3>Histórico da solicitação</h3><ol class="repair-history">${historia || '<li>Solicitação registrada no fluxo anterior. O histórico detalhado passa a ser registrado nas próximas ações.</li>'}</ol></section>
       </div>`,
       actions: `<button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>
-        ${semec && r.status === 'NOVA' ? '<button type="button" class="server-button server-button--primary" data-repair-start>Iniciar análise</button>' : ''}
         ${podeDecidir || podeCancelar ? '<button type="button" class="server-button server-button--primary" data-repair-save>Registrar decisão</button>' : ''}
         ${podeComplementar ? '<button type="button" class="server-button server-button--primary" data-repair-complement>Enviar complemento</button>' : ''}`});
     const atualizacao = async (action, payload, button, form) => {
@@ -5505,6 +5510,14 @@
       controls.forEach(el => { el.disabled = true; });
       dialog.querySelector('[data-dialog-close]').disabled = true;
       try {
+        // Compatibilidade com o fluxo existente: a decisão é uma única etapa na interface.
+        // Só avança ao registrar, preservando a versão retornada para uma eventual nova tentativa.
+        if (action === 'ATUALIZAR_SOLICITACAO_REPARO' && r.status === 'NOVA' && payload.status !== 'CANCELADA') {
+          const inicio = extrairResultado(await backend.request(action, {
+            idSolicitacao: r.idSolicitacao, versaoEsperada: r.versao, status: 'EM_ANALISE'
+          }));
+          r.status = inicio.status; r.versao = inicio.versao;
+        }
         const result = extrairResultado(await backend.request(action, {
           idSolicitacao: r.idSolicitacao, versaoEsperada: r.versao, ...payload
         }));
@@ -5545,8 +5558,6 @@
         }, e.target, form);
       });
     }
-    dialogActions.querySelector('[data-repair-start]')?.addEventListener('click', e =>
-      atualizacao('ATUALIZAR_SOLICITACAO_REPARO', {status: 'EM_ANALISE'}, e.target));
     dialogActions.querySelector('[data-repair-complement]')?.addEventListener('click', e => {
       const complementForm = dialogBody.querySelector('[data-repair-complement-form]');
       atualizacao('COMPLEMENTAR_SOLICITACAO_REPARO', {mensagem: complementForm.elements.mensagem.value.trim()}, e.target, complementForm);

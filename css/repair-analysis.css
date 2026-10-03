@@ -5,7 +5,7 @@
 .repair-table-scroll { overflow-x: auto; max-width: 100%; }
 .repair-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
 .repair-table th, .repair-table td { text-align: left; vertical-align: top; padding: .5rem; border-bottom: 1px solid #dbe4ee; }
-.repair-correction { padding: .8rem 0; border-bottom: 1px solid #dbe4ee; }
+.repair-correction { display: grid; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid #dbe4ee; }
 .repair-history { padding-left: 1.2rem; }
 .repair-history li { margin-bottom: 1rem; }
 .repair-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-bottom: 1rem; }
@@ -18,3 +18,15 @@ body.school-area-page [data-school-dialog]:has(.repair-analysis) .server-modal__
 body.school-area-page [data-school-dialog]:has(.repair-analysis) [data-dialog-body] { min-height: 0; max-height: 65vh; overflow-y: auto; }
 body.school-area-page [data-school-dialog]:has(.repair-analysis) [data-dialog-actions] { flex-shrink: 0; }
 [data-school-dialog][data-repair-saving] [data-dialog-close] { pointer-events: none; }
+
+/* Espaçamento dos reparos no padrão de controles do Portal. */
+.school-dialog-form:is([data-repair-form], [data-repair-analysis-form], [data-repair-complement-form]),
+.repair-corrections-editor,
+[data-approved-fields]:not([hidden]) { display: grid; gap: 1rem; }
+.repair-correction > p,
+.school-dialog-form:is([data-repair-form], [data-repair-analysis-form], [data-repair-complement-form]) > :is(p, h3) { margin: 0; }
+.repair-corrections-editor > .server-button,
+.repair-correction > .server-button { justify-self: start; }
+body.school-area-page [data-school-dialog]:has([data-repair-form], .repair-analysis) .server-button,
+body.school-area-page [data-school-dialog]:has([data-repair-form], .repair-analysis) .server-button:is(:hover, :focus-visible) { box-shadow: none; transform: none; }
+body.school-area-page [data-school-dialog]:has([data-repair-form], .repair-analysis) [data-dialog-actions] { gap: 1rem; margin-top: 1.25rem; }
