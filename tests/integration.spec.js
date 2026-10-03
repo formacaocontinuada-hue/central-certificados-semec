@@ -129,7 +129,7 @@ const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
 (async () => {
   const browser = await chromium.launch({
     headless: true,
-    executablePath: process.env.CENTRAL_BROWSER_PATH || 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+    ...(process.env.CENTRAL_BROWSER_PATH ? {executablePath: process.env.CENTRAL_BROWSER_PATH} : {})
   });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   const pageErrors = [];
@@ -188,6 +188,8 @@ const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
   await page.locator('[data-existing-results] [data-certificate-repair="CERT-1"]').click();
   await page.locator('[data-repair-form] [name="categoria"]').selectOption('Carga horária');
   await page.locator('[data-repair-form] [name="descricao"]').fill('Conferir a carga horária registrada.');
+  await page.locator('[data-repair-form] [name="campo"]').selectOption('CH_CERTIFICADA');
+  await page.locator('[data-repair-form] [name="valorProposto"]').fill('24');
   await page.getByRole('button', { name: 'Enviar solicitação' }).click();
   await page.getByRole('heading', { name: 'Reparo enviado para análise' }).waitFor({ state: 'visible' });
   assert.equal(await page.locator('[data-action-result-protocol]').innerText(), 'REP-TESTE-001');
