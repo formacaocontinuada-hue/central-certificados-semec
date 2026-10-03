@@ -209,7 +209,7 @@
 
     const brasao =
       tipo === 'SEMEC'
-        ? centralMainLogo
+        ? municipioMainLogo
         : (
             escolaCatalogada?.brasao ||
             municipioMainLogo
@@ -272,7 +272,7 @@
 
     const textoAltBrasao =
       tipo === 'SEMEC'
-        ? 'Brasão do Portal SEMEC'
+        ? 'Brasão de Tangará da Serra'
         : (
             indigena &&
             !possuiBrasaoProprio
@@ -310,7 +310,7 @@
 
               img.src =
                 tipo === 'SEMEC'
-                  ? centralMainLogo
+                  ? municipioMainLogo
                   : (
                       indigena
                         ? (
