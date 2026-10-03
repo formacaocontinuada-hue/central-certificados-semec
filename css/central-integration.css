@@ -1,4 +1,11 @@
 /* Complemento da Central: estados da integração com o registro oficial. */
+/* Botões da Central seguem o padrão sem sombra, inclusive nas interações. */
+body.school-area-page :is(button, .server-button, .server-link, .primary-button),
+body.school-area-page :is(button, .server-button, .server-link, .primary-button):is(:hover, :focus-visible, :active) {
+  box-shadow: none;
+  transform: none;
+}
+
 /* O símbolo da conta institucional aparece inteiro, sem fundo circular. */
 body.school-area-page .server-avatar--school {
   border: 0;
