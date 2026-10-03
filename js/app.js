@@ -895,6 +895,7 @@
 
   const closeDialog =
     () => {
+      if (dialog?.hasAttribute('data-repair-saving')) return;
 
       if (
         dialog
@@ -937,6 +938,10 @@
 
     dialogActions.innerHTML =
       actions;
+
+    dialogBody.scrollTop = 0;
+    const panel = dialog.querySelector('.server-modal__panel');
+    if (panel) panel.scrollTop = 0;
 
 
     dialog.hidden =
@@ -2747,81 +2752,13 @@
    * ===================================================== */
 
 
-  const formatarStatusAcao = (
-    valor
-  ) => {
-
-    const status =
-      chaveCanonica(
-        valor
-      );
-
-
-    if (
-      status ===
-      'enviado'
-    ) {
-      return 'Enviado';
-    }
-
-
-    if (
-      status ===
-      'erro'
-    ) {
-      return 'Falha no envio';
-    }
-
-
-    if (
-      status ===
-      'recebida'
-    ) {
-      return 'Recebida';
-    }
-
-
-    if (
-      status ===
-      'emanalise'
-    ) {
-      return 'Em análise';
-    }
-
-
-    if (
-      status ===
-        'corrigida' ||
-      status ===
-        'concluida' ||
-      status ===
-        'concluido'
-    ) {
-      return 'Corrigida';
-    }
-
-
-    if (
-      status ===
-        'naoprocede' ||
-      status ===
-        'recusada' ||
-      status ===
-        'indeferida'
-    ) {
-      return 'Não procede';
-    }
-
-
-    return String(
-      valor ||
-      'Registrado'
-    ).replace(
-      /_/g,
-      ' '
-    );
-  };
-
+  const formatarStatusAcao = valor => ({
+    enviado: 'Enviado', erro: 'Falha no envio', recebida: 'Nova', nova: 'Nova',
+    emanalise: 'Em análise', aguardandoinformacao: 'Aguardando informação',
+    aprovadaparacorrecao: 'Aprovada para correção', indeferida: 'Indeferida',
+    naoprocede: 'Indeferida', cancelada: 'Cancelada',
+    corrigida: 'Encerrada no fluxo anterior', concluida: 'Encerrada no fluxo anterior'
+  }[chaveCanonica(valor)] || String(valor || 'Registrado').replace(/_/g, ' '));
 
   const normalizarEnvio = (
     registro = {}
@@ -2931,6 +2868,11 @@
   const normalizarSolicitacao = (
     registro = {}
   ) => ({
+    versao: Number(registro.versao) || 0,
+    correcoesSolicitadas: registro.correcoesSolicitadas || [],
+    correcoesAprovadas: registro.correcoesAprovadas || [],
+    conferencia: registro.conferencia || '',
+
 
     id:
       String(
@@ -3396,146 +3338,15 @@
       'SEMEC';
 
 
-    if (
-      administrativo &&
-      perfilSemec
-    ) {
-
-      const status =
-        chaveCanonica(
-          solicitacao
-            .statusOriginal
-        );
-
-
-      const actions =
-        document.createElement(
-          'div'
-        );
-
-
-      actions.className =
-        'school-table-actions';
-
-
-      if (
-        status ===
-        'recebida'
-      ) {
-
-        const analisarButton =
-          document.createElement(
-            'button'
-          );
-
-
-        analisarButton.type =
-          'button';
-
-
-        analisarButton.className =
-          'server-button server-button--primary';
-
-
-        analisarButton.textContent =
-          'Iniciar análise';
-
-
-        analisarButton.dataset
-          .repairAdminAction =
-            'EM_ANALISE';
-
-
-        analisarButton.dataset
-          .repairAdminId =
-            solicitacao.id;
-
-
-        actions.appendChild(
-          analisarButton
-        );
-      }
-
-
-      if (
-        status ===
-        'emanalise'
-      ) {
-
-        const corrigidaButton =
-          document.createElement(
-            'button'
-          );
-
-
-        corrigidaButton.type =
-          'button';
-
-
-        corrigidaButton.className =
-          'server-button server-button--primary';
-
-
-        corrigidaButton.textContent =
-          'Marcar como corrigida';
-
-
-        corrigidaButton.dataset
-          .repairAdminAction =
-            'CORRIGIDA';
-
-
-        corrigidaButton.dataset
-          .repairAdminId =
-            solicitacao.id;
-
-
-        const naoProcedeButton =
-          document.createElement(
-            'button'
-          );
-
-
-        naoProcedeButton.type =
-          'button';
-
-
-        naoProcedeButton.className =
-          'server-button server-button--ghost';
-
-
-        naoProcedeButton.textContent =
-          'Não procede';
-
-
-        naoProcedeButton.dataset
-          .repairAdminAction =
-            'NAO_PROCEDE';
-
-
-        naoProcedeButton.dataset
-          .repairAdminId =
-            solicitacao.id;
-
-
-        actions.append(
-          corrigidaButton,
-          naoProcedeButton
-        );
-      }
-
-
-      if (
-        actions.childElementCount >
-        0
-      ) {
-
-        article.appendChild(
-          actions
-        );
-      }
+    if (administrativo) {
+      const actions = document.createElement('div');
+      actions.className = 'school-table-actions';
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'server-button server-button--primary';
+      button.textContent = perfilSemec ? 'Analisar solicitação' : 'Acompanhar solicitação';
+      button.dataset.repairAdminAction = 'ABRIR'; button.dataset.repairAdminId = solicitacao.id;
+      actions.append(button); article.append(actions);
     }
-
 
     return article;
   };
@@ -3706,7 +3517,7 @@
         repairsEl.textContent =
           String(
 
-            solicitacoesAtuais
+            totalReparosPendentes ?? solicitacoesAtuais
               .filter(
                 item => {
 
@@ -3718,10 +3529,7 @@
 
 
                   return (
-                    status ===
-                      'recebida' ||
-                    status ===
-                      'emanalise'
+                    ['recebida', 'nova', 'emanalise', 'aguardandoinformacao', 'aprovadaparacorrecao'].includes(status)
                   );
                 }
               )
@@ -4114,14 +3922,15 @@
       );
 
 
+      prepararFiltrosReparo();
+
       const result =
         extrairResultado(
 
           await backend.request(
             'LISTAR_SOLICITACOES_REPARO',
             {
-              limite:
-                200
+              limite: 200, offset: reparosOffset, status: reparosFiltro
             }
           )
         );
@@ -4136,6 +3945,10 @@
         );
       }
 
+
+      totalReparosPendentes = Number.isInteger(result.totalPendentes) ? result.totalPendentes : null;
+      reparosTemMais = Boolean(result.temMais);
+      atualizarFiltrosReparo();
 
       solicitacoesAtuais =
         Array.isArray(
@@ -4187,7 +4000,7 @@
         ) {
 
           heading.textContent =
-            'Tratamento de solicitações de reparo';
+            'Análise de solicitações de reparo';
         }
 
 
@@ -4196,7 +4009,7 @@
         ) {
 
           description.textContent =
-            'Analise as solicitações recebidas, registre a resposta da SEMEC e acompanhe a conclusão dos reparos.';
+            'Confira o certificado, registre a decisão e acompanhe as correções aprovadas para futura reemissão.';
         }
       }
 
@@ -4236,6 +4049,11 @@
           .length === 0
       );
 
+
+      if (repairPageList && result.total > solicitacoesAtuais.length) {
+        const count = document.querySelector('[data-repair-page-count]');
+        if (count) count.textContent = `${result.total} solicitações · exibindo ${reparosOffset + 1}–${reparosOffset + solicitacoesAtuais.length}`;
+      }
 
       updateSummaryCards();
 
@@ -5297,6 +5115,9 @@
             '<span>Descreva o problema</span>' +
             '<textarea name="descricao" required minlength="10" maxlength="1500" placeholder="Informe o que precisa ser corrigido"></textarea>' +
           '</label>' +
+          '<h3>Campos e informações corretas</h3><div data-requested-corrections></div>' +
+          '<label><span>Link de comprovante (opcional)</span><input name="anexoUrl" type="url" maxlength="2000" placeholder="https://..."></label>' +
+          '<p>Não informe CPF completo. Use apenas o CPF mascarado.</p>' +
           '<p class="central-action-message" role="alert" data-action-error hidden></p>' +
         '</form>',
 
@@ -5319,6 +5140,12 @@
           '[data-submit-repair]'
         );
 
+
+    form?.querySelector('[data-requested-corrections]')?.append(editorCorrecoesReparo([], {
+      nomeCompleto: certificado.nome, cpfMascarado: certificado.cpfMascarado,
+      formacao: certificado.formacaoNome, escola: certificado.unidadeNome,
+      cargaHoraria: certificado.cargaHoraria, ano: certificado.ano
+    }));
 
     submit
       ?.addEventListener(
@@ -5372,6 +5199,9 @@
                   {
                     idCertificado:
                       certificado.id,
+
+                    anexoUrl: String(data.get('anexoUrl') || '').trim(),
+                    correcoes: coletarCorrecoesReparo(form),
 
                     categoria:
                       String(
@@ -5498,343 +5328,229 @@
       );
 
 
-  const atualizarReparoParaAnalise =
-    async (
-      solicitacao,
-      button
-    ) => {
+  const camposReparo = {
+    NOME_COMPLETO: 'Nome do servidor', CPF_MASCARADO: 'CPF mascarado', ESCOLA: 'Escola / unidade',
+    CH_CERTIFICADA: 'Carga horária', PERCENTUAL: 'Percentual / presença', FORMACAO: 'Formação',
+    ANO: 'Ano', DATA_EMISSAO: 'Data de emissão', PERIODO: 'Período / encontros', ASSINATURA: 'Assinatura', OUTRO: 'Outro'
+  };
+  const valoresReparo = c => ({
+    NOME_COMPLETO: c?.nomeCompleto || '', CPF_MASCARADO: c?.cpfMascarado || '', ESCOLA: c?.escola || '',
+    CH_CERTIFICADA: c?.cargaHoraria || '', PERCENTUAL: c?.percentual || '', FORMACAO: c?.formacao || '',
+    ANO: c?.ano || '', DATA_EMISSAO: c?.dataEmissao || '', PERIODO: '', ASSINATURA: '', OUTRO: ''
+  });
+  const textoReparo = valor => escaparHtmlFrontend(valor == null ? '' : valor);
 
-      if (
-        !solicitacao?.id ||
-        !backend
-      ) {
-        return;
-      }
+  const tabelaCorrecoesReparo = (correcoes, titulo) => !correcoes?.length ? '' : `
+    <section><h3>${textoReparo(titulo)}</h3><div class="repair-table-scroll"><table class="repair-table">
+      <thead><tr><th>Campo</th><th>Valor na emissão</th><th>Valor proposto</th></tr></thead>
+      <tbody>${correcoes.map(c => `<tr><td>${textoReparo(c.rotulo || camposReparo[c.campo] || c.campo)}</td>
+        <td>${textoReparo(c.valorAtual || 'Não disponível na base')}</td><td>${textoReparo(c.valorProposto)}</td></tr>`).join('')}</tbody>
+    </table></div></section>`;
 
-
-      const textoOriginal =
-        button?.textContent ||
-        'Iniciar análise';
-
-
-      if (
-        button
-      ) {
-
-        button.disabled =
-          true;
-
-
-        button.textContent =
-          'Iniciando...';
-      }
-
-
-      try {
-
-        const result =
-          extrairResultado(
-
-            await backend.request(
-              'ATUALIZAR_SOLICITACAO_REPARO',
-              {
-                idSolicitacao:
-                  solicitacao.id,
-
-                status:
-                  'EM_ANALISE'
-              }
-            )
-          );
-
-
-        await carregarSolicitacoesReparo({
-          silencioso:
-            true
-        });
-
-
-        definirStatus(
-          'ready',
-          'Solicitação em análise',
-          'O protocolo ' +
-            solicitacao.id +
-            ' foi colocado em análise pela SEMEC.'
-        );
-
-
-        return result;
-
-      } catch (
-        error
-      ) {
-
-        if (
-          button
-        ) {
-
-          button.disabled =
-            false;
-
-
-          button.textContent =
-            textoOriginal;
-        }
-
-
-        openDialog({
-
-          kicker:
-            'Tratamento de reparo',
-
-          title:
-            'Não foi possível iniciar a análise',
-
-          html:
-            '<p data-access-error-message></p>',
-
-          actions:
-            '<button class="server-button server-button--primary" type="button" data-modal-close>Entendi</button>'
-        });
-
-
-        const message =
-          dialogBody
-            ?.querySelector(
-              '[data-access-error-message]'
-            );
-
-
-        if (
-          message
-        ) {
-
-          message.textContent =
-            error.message ||
-            'Não foi possível atualizar a solicitação.';
-        }
-      }
+  const editorCorrecoesReparo = (correcoes = [], certificado = null) => {
+    const container = document.createElement('div');
+    container.dataset.repairCorrections = '';
+    const atuais = valoresReparo(certificado);
+    const adicionar = (item = {}) => {
+      if (container.querySelectorAll('[data-repair-correction]').length >= 10) return;
+      const row = document.createElement('div');
+      row.className = 'repair-correction'; row.dataset.repairCorrection = '';
+      row.innerHTML = `<label><span>Campo</span><select name="campo" required>
+        ${Object.entries(camposReparo).map(([key, label]) => `<option value="${key}">${label}</option>`).join('')}</select></label>
+        <p><strong>Valor na emissão:</strong> <span data-current-value></span></p>
+        <label><span>Informação correta${certificado ? ' proposta' : ''}</span>
+        <textarea name="valorProposto" required maxlength="500" placeholder="CPF somente mascarado, se aplicável"></textarea></label>
+        <button type="button" class="server-button server-button--ghost" data-remove-correction>Remover campo</button>`;
+      const select = row.querySelector('select');
+      select.value = Object.hasOwn(camposReparo, item.campo) ? item.campo : 'NOME_COMPLETO';
+      row.querySelector('textarea').value = item.valorProposto || '';
+      const atualizar = () => { row.querySelector('[data-current-value]').textContent = atuais[select.value] || (select.value === item.campo ? item.valorAtual : '') || 'Não disponível na base'; };
+      atualizar(); select.addEventListener('change', atualizar);
+      row.querySelector('[data-remove-correction]').addEventListener('click', () => row.remove());
+      container.appendChild(row);
     };
+    (correcoes.length ? correcoes : [{}]).forEach(adicionar);
+    const wrapper = document.createElement('div');
+    wrapper.append(container);
+    const add = document.createElement('button');
+    add.type = 'button'; add.className = 'server-button server-button--ghost'; add.textContent = 'Adicionar campo';
+    add.addEventListener('click', () => adicionar()); wrapper.append(add);
+    return wrapper;
+  };
 
+  const coletarCorrecoesReparo = form => Array.from(form.querySelectorAll('[data-repair-correction]')).map(row => ({
+    campo: row.querySelector('[name="campo"]').value,
+    valorProposto: row.querySelector('[name="valorProposto"]').value.trim()
+  }));
 
-  const abrirDialogoConclusaoReparo = (
-    solicitacao,
-    novoStatus
-  ) => {
+  let totalReparosPendentes = null;
+  let reparosOffset = 0;
+  let reparosFiltro = '';
+  let reparosTemMais = false;
+  const prepararFiltrosReparo = () => {
+    if (!repairPageList || document.querySelector('[data-repair-filter]')) return;
+    const controls = document.createElement('div'); controls.className = 'repair-controls';
+    controls.innerHTML = `<label>Situação <select data-repair-filter>
+      <option value="">Todas</option><option value="NOVA">Nova</option><option value="EM_ANALISE">Em análise</option>
+      <option value="AGUARDANDO_INFORMACAO">Aguardando informação</option>
+      <option value="APROVADA_PARA_CORRECAO">Aprovada para correção</option>
+      <option value="INDEFERIDA">Indeferida</option><option value="CANCELADA">Cancelada</option>
+      <option value="CORRIGIDA">Encerrada no fluxo anterior</option></select></label>
+      <button type="button" class="server-button server-button--ghost" data-repair-prev disabled>Anterior</button>
+      <button type="button" class="server-button server-button--ghost" data-repair-next disabled>Próxima</button>`;
+    repairPageList.before(controls);
+    const carregar = async () => {
+      controls.querySelectorAll('button, select').forEach(el => { el.disabled = true; });
+      try { await carregarSolicitacoesReparo(); }
+      catch (erro) { definirStatus('error', 'Não foi possível carregar os reparos', erro.message); }
+      finally { atualizarFiltrosReparo(); }
+    };
+    controls.querySelector('select').addEventListener('change', e => { reparosFiltro = e.target.value; reparosOffset = 0; carregar(); });
+    controls.querySelector('[data-repair-prev]').addEventListener('click', () => { reparosOffset = Math.max(0, reparosOffset - 200); carregar(); });
+    controls.querySelector('[data-repair-next]').addEventListener('click', () => { reparosOffset += 200; carregar(); });
+  };
+  const atualizarFiltrosReparo = () => {
+    const filter = document.querySelector('[data-repair-filter]');
+    if (filter) filter.disabled = false;
+    const prev = document.querySelector('[data-repair-prev]'); if (prev) prev.disabled = reparosOffset === 0;
+    const next = document.querySelector('[data-repair-next]'); if (next) next.disabled = !reparosTemMais;
+  };
 
-    const corrigida =
-      novoStatus ===
-      'CORRIGIDA';
+  const abrirAnaliseReparo = async solicitacao => {
+    openDialog({kicker: 'Solicitações de reparo', title: 'Carregando solicitação',
+      html: '<p role="status">Consultando o certificado oficial e o histórico...</p>',
+      actions: '<button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>'});
+    // Evita que uma consulta tardia reabra um diálogo fechado ou substituído.
+    const loadingBody = dialogBody.firstElementChild;
+    try {
+      const detalhe = extrairResultado(await backend.request('OBTER_SOLICITACAO_REPARO', {idSolicitacao: solicitacao.id}));
+      if (dialog.hidden || dialogBody.firstElementChild !== loadingBody) return;
+      renderizarAnaliseReparo(detalhe);
+    } catch (erro) {
+      if (dialog.hidden || dialogBody.firstElementChild !== loadingBody) return;
+      openDialog({kicker: 'Solicitações de reparo', title: 'Não foi possível abrir a solicitação',
+        html: `<p role="alert">${textoReparo(erro.message)}</p>`,
+        actions: '<button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>'});
+    }
+  };
 
-
-    const titulo =
-      corrigida
-        ? 'Concluir como corrigida'
-        : 'Marcar como não procede';
-
-
-    const descricao =
-      corrigida
-        ? 'Registre uma resposta objetiva informando o que foi corrigido. Esta resposta ficará visível para a unidade solicitante.'
-        : 'Registre uma resposta objetiva explicando por que a solicitação não procede. Esta resposta ficará visível para a unidade solicitante.';
-
-
-    const textoBotao =
-      corrigida
-        ? 'Confirmar correção'
-        : 'Confirmar não procede';
-
-
-    openDialog({
-
-      kicker:
-        'Tratamento de reparo',
-
-      title:
-        titulo,
-
-      html:
-        '<form class="school-dialog-form" data-repair-admin-form>' +
-          '<p><strong>Servidor(a):</strong> ' +
-            escaparHtmlFrontend(
-              solicitacao.nome
-            ) +
-          '</p>' +
-          '<p><strong>Protocolo:</strong> ' +
-            escaparHtmlFrontend(
-              solicitacao.id
-            ) +
-          '</p>' +
-          '<p>' +
-            descricao +
-          '</p>' +
-          '<label>' +
-            '<span>Resposta da SEMEC</span>' +
-            '<textarea name="resposta" required minlength="10" maxlength="1500" placeholder="Escreva a resposta que ficará disponível para a unidade"></textarea>' +
-          '</label>' +
-          '<p class="central-action-message" role="alert" data-action-error hidden></p>' +
-        '</form>',
-
-      actions:
-        '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button>' +
-        '<button class="server-button server-button--primary" type="button" data-submit-repair-admin>' +
-          textoBotao +
-        '</button>'
+  const renderizarAnaliseReparo = detalhe => {
+    const r = detalhe.solicitacao;
+    const c = detalhe.certificado;
+    const semec = detalhe.perfilAcesso === 'SEMEC';
+    const podeDecidir = semec && r.status === 'EM_ANALISE';
+    const podeComplementar = r.status === 'AGUARDANDO_INFORMACAO' &&
+      r.idUnidadeSolicitante === (detalhe.unidade?.idEscola || '');
+    const podeCancelar = semec && ['NOVA', 'EM_ANALISE'].includes(r.status);
+    const exibicao = c || detalhe.certificadoNaSolicitacao;
+    const resumo = exibicao ? `<dl class="school-detail-list">
+      ${[['Nome', exibicao.nomeCompleto], ['CPF mascarado', exibicao.cpfMascarado], ['Formação', exibicao.formacao],
+        ['Unidade', exibicao.escola], ['Carga horária', exibicao.cargaHoraria], ['Percentual', exibicao.percentual],
+        ['Ano', exibicao.ano], ['Emissão', exibicao.dataEmissao], ['ID do certificado', exibicao.idCertificado]]
+        .map(([k,v]) => `<div><dt>${k}</dt><dd>${textoReparo(v || 'Não informado')}</dd></div>`).join('')}</dl>` : '';
+    const historia = (detalhe.historico || []).map(evento => `<li>
+      <strong>${textoReparo(formatarStatusAcao(evento.status))}</strong> · ${textoReparo(evento.dataHora)}
+      <p>Conta responsável: ${textoReparo(evento.conta)}</p><p>${textoReparo(evento.mensagem)}</p>
+      ${evento.conferencia ? `<p><strong>Conferência:</strong> ${textoReparo(evento.conferencia)}</p>` : ''}
+      ${tabelaCorrecoesReparo(evento.correcoes, 'Campos registrados')}</li>`).join('');
+    const decisoes = podeDecidir ? `
+      <option value="APROVADA_PARA_CORRECAO" ${!c || chaveCanonica(c.status) !== 'ativo' ? 'disabled' : ''}>Aprovar correção</option>
+      <option value="AGUARDANDO_INFORMACAO">Solicitar informação complementar</option>
+      <option value="INDEFERIDA">Indeferir solicitação</option>` : '';
+    openDialog({kicker: `Protocolo ${r.idSolicitacao} · ${formatarStatusAcao(r.status)}`,
+      title: semec ? 'Analisar solicitação de reparo' : 'Acompanhar solicitação de reparo',
+      html: `<div class="repair-analysis">
+        <section><h3>Certificado relacionado</h3>${resumo}
+          ${!c ? '<p role="alert">O certificado não foi localizado no registro atual. A aprovação fica bloqueada. O resumo acima, quando disponível, é o registro da abertura.</p>' : ''}
+          ${c?.linkCertificado ? '<button type="button" class="server-button server-button--ghost" data-repair-view>Visualizar certificado atual</button>' : ''}
+        </section>
+        <section><h3>Solicitação da unidade</h3><p><strong>Unidade solicitante:</strong> ${textoReparo(r.unidadeSolicitante)}</p>
+          <p><strong>Categoria:</strong> ${textoReparo(r.categoria)}</p><p>${textoReparo(r.descricao)}</p>
+          ${tabelaCorrecoesReparo(r.correcoesSolicitadas, 'Correções solicitadas')}
+          ${r.anexoUrl && /^https:\/\//i.test(r.anexoUrl) ? `<p><a href="${textoReparo(r.anexoUrl)}" target="_blank" rel="noopener noreferrer">Abrir comprovante informado</a></p>` : ''}</section>
+        <section><h3>Dados para conferência</h3>
+          <p>A base oficial informa os dados da emissão. Ela não comprova, por si só, a correção pedida.
+          Período, encontros e assinaturas não estão estruturados nesta base; confira os documentos disponíveis ou solicite complemento.</p>
+          ${detalhe.certificadoNaSolicitacao && c && JSON.stringify(c) !== JSON.stringify(detalhe.certificadoNaSolicitacao)
+            ? '<p>O registro oficial mudou desde a abertura da solicitação. Confira os valores atuais antes de decidir.</p>' : ''}
+        </section>
+        ${r.status === 'APROVADA_PARA_CORRECAO' ? `<section><h3>Correção aprovada</h3>
+          <p>O certificado aguarda reemissão. A aprovação não altera o PDF atual.</p>
+          ${tabelaCorrecoesReparo(r.correcoesAprovadas, 'Campos aprovados')}<p>${textoReparo(r.conferencia)}</p></section>` : ''}
+        ${r.resposta ? `<section><h3>Decisão / orientação da SEMEC</h3><p>${textoReparo(r.resposta)}</p></section>` : ''}
+        ${(podeDecidir || podeCancelar) ? `<form class="school-dialog-form" data-repair-analysis-form>
+          <h3>Decisão da análise</h3><label><span>Decisão</span><select name="status" required>
+            <option value="">Selecione</option>${decisoes}${podeCancelar ? '<option value="CANCELADA">Cancelar solicitação por duplicidade ou abertura indevida</option>' : ''}</select></label>
+          <div data-approved-fields hidden><h3>Campos aprovados para correção</h3><div data-corrections-editor></div>
+            <label><span>Dados e documentos conferidos</span><textarea name="conferencia" minlength="10" maxlength="1500"
+              placeholder="Registre a fonte e a informação que comprovam a correção"></textarea></label></div>
+          <label><span>Justificativa / orientação para a unidade</span><textarea name="resposta" required minlength="10" maxlength="1500"></textarea></label>
+          <p class="central-action-message" role="alert" data-action-error hidden></p></form>` : ''}
+        ${podeComplementar ? `<form class="school-dialog-form" data-repair-complement-form><h3>Enviar informação complementar</h3>
+          <label><span>Informações solicitadas pela SEMEC</span><textarea name="mensagem" required minlength="10" maxlength="1500"
+            placeholder="Informe a comprovação e onde ela pode ser conferida. Não inclua CPF completo."></textarea></label>
+          <p class="central-action-message" role="alert" data-action-error hidden></p></form>` : ''}
+        <section><h3>Histórico da solicitação</h3><ol class="repair-history">${historia || '<li>Solicitação registrada no fluxo anterior. O histórico detalhado passa a ser registrado nas próximas ações.</li>'}</ol></section>
+      </div>`,
+      actions: `<button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>
+        ${semec && r.status === 'NOVA' ? '<button type="button" class="server-button server-button--primary" data-repair-start>Iniciar análise</button>' : ''}
+        ${podeDecidir || podeCancelar ? '<button type="button" class="server-button server-button--primary" data-repair-save>Registrar decisão</button>' : ''}
+        ${podeComplementar ? '<button type="button" class="server-button server-button--primary" data-repair-complement>Enviar complemento</button>' : ''}`});
+    const atualizacao = async (action, payload, button, form) => {
+      if (form && !form.reportValidity()) return;
+      const title = button.textContent;
+      button.disabled = true; button.textContent = 'Registrando...';
+      dialog.setAttribute('data-repair-saving', '');
+      const controls = [...dialogActions.querySelectorAll('button')];
+      controls.forEach(el => { el.disabled = true; });
+      dialog.querySelector('[data-dialog-close]').disabled = true;
+      try {
+        const result = extrairResultado(await backend.request(action, {
+          idSolicitacao: r.idSolicitacao, versaoEsperada: r.versao, ...payload
+        }));
+        // Confirmação da gravação não depende do sucesso da atualização da lista.
+        let aviso = '';
+        try { await carregarSolicitacoesReparo({silencioso: true}); }
+        catch (_) { aviso = ' A lista não pôde ser atualizada; feche e recarregue a página.'; }
+        openDialog({kicker: `Protocolo ${r.idSolicitacao}`, title: formatarStatusAcao(result.status),
+          html: `<p>${textoReparo(result.mensagem)}${textoReparo(aviso)}</p>`,
+          actions: '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'});
+      } catch (erro) {
+        if (form) mostrarErroAcao(form, erro.message);
+        else { const p = document.createElement('p'); p.setAttribute('role', 'alert'); p.textContent = erro.message; dialogBody.append(p); }
+        button.textContent = title; controls.forEach(el => { el.disabled = false; });
+      } finally { dialog.removeAttribute('data-repair-saving'); dialog.querySelector('[data-dialog-close]').disabled = false; }
+    };
+    dialogBody.querySelector('[data-repair-view]')?.addEventListener('click', () => {
+      const certificado = normalizarCertificado(c);
+      abrirCertificadoComAuditoria(certificado, 'VISUALIZAR');
     });
-
-
-    const form =
-      dialogBody
-        ?.querySelector(
-          '[data-repair-admin-form]'
-        );
-
-
-    const submit =
-      dialogActions
-        ?.querySelector(
-          '[data-submit-repair-admin]'
-        );
-
-
-    form
-      ?.querySelector(
-        '[name="resposta"]'
-      )
-      ?.focus();
-
-
-    submit
-      ?.addEventListener(
-        'click',
-        async () => {
-
-          if (
-            !form
-              ?.reportValidity()
-          ) {
-            return;
-          }
-
-
-          const error =
-            form.querySelector(
-              '[data-action-error]'
-            );
-
-
-          if (
-            error
-          ) {
-
-            error.hidden =
-              true;
-          }
-
-
-          const data =
-            new FormData(
-              form
-            );
-
-
-          const resposta =
-            String(
-              data.get(
-                'resposta'
-              ) || ''
-            ).trim();
-
-
-          definirAcaoOcupada(
-            form,
-            submit,
-            true,
-            'Salvando...',
-            textoBotao
-          );
-
-
-          try {
-
-            const result =
-              extrairResultado(
-
-                await backend.request(
-                  'ATUALIZAR_SOLICITACAO_REPARO',
-                  {
-                    idSolicitacao:
-                      solicitacao.id,
-
-                    status:
-                      novoStatus,
-
-                    resposta:
-                      resposta
-                  }
-                )
-              );
-
-
-            await carregarSolicitacoesReparo({
-              silencioso:
-                true
-            });
-
-
-            openDialog({
-
-              kicker:
-                'Tratamento concluído',
-
-              title:
-                corrigida
-                  ? 'Solicitação corrigida'
-                  : 'Solicitação encerrada como não procede',
-
-              html:
-                '<p>A atualização foi registrada e já está disponível para a unidade solicitante.</p>' +
-                '<p><strong>Protocolo:</strong> ' +
-                  escaparHtmlFrontend(
-                    result.idSolicitacao ||
-                    solicitacao.id
-                  ) +
-                '</p>',
-
-              actions:
-                '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'
-            });
-
-
-            definirStatus(
-              'ready',
-              'Solicitação atualizada',
-              'O protocolo ' +
-                solicitacao.id +
-                ' foi encerrado pela SEMEC.'
-            );
-
-          } catch (
-            error
-          ) {
-
-            mostrarErroAcao(
-              form,
-              error.message ||
-              'Não foi possível concluir a solicitação.'
-            );
-
-
-            definirAcaoOcupada(
-              form,
-              submit,
-              false,
-              'Salvando...',
-              textoBotao
-            );
-          }
-        }
-      );
+    const form = dialogBody.querySelector('[data-repair-analysis-form]');
+    if (form) {
+      form.querySelector('[data-corrections-editor]').append(editorCorrecoesReparo(r.correcoesSolicitadas || [], c));
+      const toggle = () => {
+        const approved = form.elements.status.value === 'APROVADA_PARA_CORRECAO';
+        form.querySelector('[data-approved-fields]').hidden = !approved;
+        form.querySelectorAll('[data-approved-fields] input, [data-approved-fields] textarea, [data-approved-fields] select, [data-approved-fields] button')
+          .forEach(el => { el.disabled = !approved; });
+        form.elements.conferencia.required = approved;
+      };
+      toggle(); form.elements.status.addEventListener('change', toggle);
+      dialogActions.querySelector('[data-repair-save]').addEventListener('click', e => {
+        if (!form.reportValidity()) return;
+        atualizacao('ATUALIZAR_SOLICITACAO_REPARO', {
+          status: form.elements.status.value, resposta: form.elements.resposta.value.trim(),
+          conferencia: form.elements.conferencia.value.trim(), correcoes: coletarCorrecoesReparo(form),
+          certificadoConferidoJson: JSON.stringify(c)
+        }, e.target, form);
+      });
+    }
+    dialogActions.querySelector('[data-repair-start]')?.addEventListener('click', e =>
+      atualizacao('ATUALIZAR_SOLICITACAO_REPARO', {status: 'EM_ANALISE'}, e.target));
+    dialogActions.querySelector('[data-repair-complement]')?.addEventListener('click', e => {
+      const complementForm = dialogBody.querySelector('[data-repair-complement-form]');
+      atualizacao('COMPLEMENTAR_SOLICITACAO_REPARO', {mensagem: complementForm.elements.mensagem.value.trim()}, e.target, complementForm);
+    });
   };
 
 
@@ -6282,75 +5998,12 @@
       'click',
       event => {
 
-        const repairAdminButton =
-          event.target.closest(
-            '[data-repair-admin-action]'
-          );
-
-
-        if (
-          repairAdminButton
-        ) {
-
-          const idSolicitacao =
-            String(
-              repairAdminButton
-                .dataset
-                .repairAdminId ||
-              ''
-            );
-
-
-          const novoStatus =
-            String(
-              repairAdminButton
-                .dataset
-                .repairAdminAction ||
-              ''
-            );
-
-
-          const solicitacao =
-            solicitacoesAtuais
-              .find(
-                item =>
-                  item.id ===
-                  idSolicitacao
-              );
-
-
-          if (
-            solicitacao
-          ) {
-
-            if (
-              novoStatus ===
-              'EM_ANALISE'
-            ) {
-
-              atualizarReparoParaAnalise(
-                solicitacao,
-                repairAdminButton
-              );
-
-            } else if (
-              novoStatus ===
-                'CORRIGIDA' ||
-              novoStatus ===
-                'NAO_PROCEDE'
-            ) {
-
-              abrirDialogoConclusaoReparo(
-                solicitacao,
-                novoStatus
-              );
-            }
-          }
-
-
+        const repairAdminButton = event.target.closest('[data-repair-admin-action]');
+        if (repairAdminButton) {
+          const solicitacao = solicitacoesAtuais.find(item => item.id === repairAdminButton.dataset.repairAdminId);
+          if (solicitacao) abrirAnaliseReparo(solicitacao);
           return;
         }
-
 
         const viewButton =
           event.target.closest(

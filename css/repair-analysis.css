@@ -1,0 +1,20 @@
+/* Layout funcional da análise; usa as cores e botões já existentes. */
+.repair-analysis { display: grid; gap: 1rem; }
+.repair-analysis section, .repair-analysis form { min-width: 0; }
+.repair-analysis p, .repair-history p, .repair-table td { white-space: pre-wrap; overflow-wrap: anywhere; }
+.repair-table-scroll { overflow-x: auto; max-width: 100%; }
+.repair-table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+.repair-table th, .repair-table td { text-align: left; vertical-align: top; padding: .5rem; border-bottom: 1px solid #dbe4ee; }
+.repair-correction { padding: .8rem 0; border-bottom: 1px solid #dbe4ee; }
+.repair-history { padding-left: 1.2rem; }
+.repair-history li { margin-bottom: 1rem; }
+.repair-controls { display: flex; flex-wrap: wrap; align-items: end; gap: .75rem; margin-bottom: 1rem; }
+.repair-controls label { display: grid; gap: .3rem; }
+.repair-controls select { max-width: 100%; padding: .6rem; border: 1px solid #dbe4ee; border-radius: .5rem; font: inherit; }
+body.school-area-page [data-school-dialog]:has(.repair-analysis) .server-modal__panel {
+  display: flex; flex-direction: column; width: min(900px, calc(100vw - 2rem)); max-width: 900px;
+  max-height: calc(100dvh - 2rem); overflow: hidden;
+}
+body.school-area-page [data-school-dialog]:has(.repair-analysis) [data-dialog-body] { min-height: 0; max-height: 65vh; overflow-y: auto; }
+body.school-area-page [data-school-dialog]:has(.repair-analysis) [data-dialog-actions] { flex-shrink: 0; }
+[data-school-dialog][data-repair-saving] [data-dialog-close] { pointer-events: none; }
