@@ -81,3 +81,20 @@ A página `validar-certificado.html` consulta o registro oficial por meio de um 
 - A resposta pública não expõe CPF, matrícula, e-mail, ID_SRV, ID do Drive, observações internas ou o hash completo.
 - Estados tratados na interface: válido, substituído, cancelado, inativo, inválido e erro.
 - A URL pública usada nos QR Codes permanece a do GitHub Pages; o Web App pode ser trocado internamente sem reemitir os certificados.
+
+## Análise de solicitações de reparo
+
+A SEMEC consulta o certificado relacionado e o histórico, confere a solicitação e registra a decisão. Aprovar significa **Aprovada para correção**: o certificado continua aguardando a futura etapa de reemissão.
+
+- Situações: Nova, Em análise, Aguardando informação, Aprovada para correção, Indeferida e Cancelada.
+- A unidade solicitante acompanha as decisões e envia informações complementares pela própria solicitação; o complemento retorna o caso para Em análise.
+- A aprovação registra os campos a corrigir, os novos valores, a fonte conferida e a justificativa.
+- Cada atualização possui versão, conta responsável, data e histórico. Uma tela desatualizada não pode sobrescrever uma decisão posterior.
+- Os registros anteriores permanecem preservados, identificados como pertencentes ao fluxo anterior quando necessário.
+- O filtro por situação e a paginação permitem consultar todas as solicitações disponíveis ao perfil.
+
+Esta proposta depende de atualização do serviço institucional antes da aplicação. O pacote de aplicação foi entregue separadamente.
+
+Os dados de emissão disponíveis não substituem a comprovação da correção. A análise informa os dados que ainda precisam ser conferidos e permite pedir complemento. O link opcional de comprovante mantém as permissões do documento de origem.
+
+Validação da interface existente: `node tests/integration.spec.js`, com ponte simulada. O teste usa dados fictícios e não acessa a base institucional. A validação do serviço institucional foi realizada separadamente.
