@@ -1,4 +1,23 @@
 /* Complemento da Central: estados da integração com o registro oficial. */
+/* O símbolo da conta institucional aparece inteiro, sem fundo circular. */
+body.school-area-page .server-avatar--school {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  padding: 0;
+}
+
+body.school-area-page .server-avatar--school img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
 /* O brasão ocupa o início do card, sem moldura própria. */
 body.school-area-page .school-unit-card {
   grid-template-columns: clamp(128px, 14vw, 164px) minmax(0, 1fr);
