@@ -5498,14 +5498,51 @@
           <p class="central-action-message" role="alert" data-action-error hidden></p></form>` : ''}
         <section><h3>Histórico da solicitação</h3><ol class="repair-history">${historia || '<li>Solicitação registrada no fluxo anterior. O histórico detalhado passa a ser registrado nas próximas ações.</li>'}</ol></section>
       </div>`,
-      actions: `<button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>
+      actions: `<p class="central-action-message repair-action-feedback" role="alert" data-repair-feedback hidden></p>
+        <button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>
         ${podeDecidir || podeCancelar ? '<button type="button" class="server-button server-button--primary" data-repair-save>Registrar decisão</button>' : ''}
         ${podeComplementar ? '<button type="button" class="server-button server-button--primary" data-repair-complement>Enviar complemento</button>' : ''}`});
+    const mostrarFalha = (form, mensagem) => {
+      const feedback = dialogActions.querySelector('[data-repair-feedback]');
+      if (feedback) { feedback.textContent = mensagem; feedback.hidden = false; }
+      else if (form) mostrarErroAcao(form, mensagem);
+    };
+    const validarFormulario = form => {
+      if (!form) return true;
+      const feedback = dialogActions.querySelector('[data-repair-feedback]');
+      if (feedback) feedback.hidden = true;
+      const error = form.querySelector('[data-action-error]');
+      if (error) error.hidden = true;
+      const operacao = form.hasAttribute('data-repair-complement-form') ? 'enviar o complemento' : 'registrar a decisão';
+      const controls = [...form.querySelectorAll('input, select, textarea')].filter(el => !el.disabled);
+      for (const control of controls) {
+        const valor = control.value.trim();
+        const rotulo = control.closest('label')?.querySelector('span')?.textContent || 'campo obrigatório';
+        let mensagem = '';
+        if (control.required && !valor) mensagem = `Preencha “${rotulo}” antes de ${operacao}.`;
+        else if (control.required && control.minLength > 0 && valor.length < control.minLength)
+          mensagem = `Preencha “${rotulo}” com pelo menos ${control.minLength} caracteres antes de ${operacao}.`;
+        else if (!control.checkValidity()) mensagem = `Confira “${rotulo}”: ${control.validationMessage}`;
+        if (mensagem) {
+          mostrarFalha(form, mensagem);
+          control.focus(); control.scrollIntoView({block: 'center'});
+          return false;
+        }
+      }
+      if (form.elements.status?.value === 'APROVADA_PARA_CORRECAO' && !form.querySelector('[data-repair-correction]')) {
+        mostrarFalha(form, 'Adicione pelo menos um campo e informe a correção antes de aprovar.');
+        form.querySelector('.repair-corrections-editor > button')?.focus();
+        return false;
+      }
+      return true;
+    };
     const atualizacao = async (action, payload, button, form) => {
-      if (form && !form.reportValidity()) return;
+      if (!validarFormulario(form)) return;
       const title = button.textContent;
-      button.disabled = true; button.textContent = 'Registrando...';
+      button.disabled = true; button.textContent = payload.status === 'APROVADA_PARA_CORRECAO' ? 'Aprovando...' : 'Registrando...';
       dialog.setAttribute('data-repair-saving', '');
+      const formControls = [...(form?.querySelectorAll('input, select, textarea, button') || [])].filter(el => !el.disabled);
+      formControls.forEach(el => { el.disabled = true; });
       const controls = [...dialogActions.querySelectorAll('button')];
       controls.forEach(el => { el.disabled = true; });
       dialog.querySelector('[data-dialog-close]').disabled = true;
@@ -5529,10 +5566,12 @@
           html: `<p>${textoReparo(result.mensagem)}${textoReparo(aviso)}</p>`,
           actions: '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'});
       } catch (erro) {
-        if (form) mostrarErroAcao(form, erro.message);
-        else { const p = document.createElement('p'); p.setAttribute('role', 'alert'); p.textContent = erro.message; dialogBody.append(p); }
+        mostrarFalha(form, erro.message || 'Não foi possível registrar a decisão. Tente novamente.');
         button.textContent = title; controls.forEach(el => { el.disabled = false; });
-      } finally { dialog.removeAttribute('data-repair-saving'); dialog.querySelector('[data-dialog-close]').disabled = false; }
+      } finally {
+        formControls.forEach(el => { el.disabled = false; });
+        dialog.removeAttribute('data-repair-saving'); dialog.querySelector('[data-dialog-close]').disabled = false;
+      }
     };
     dialogBody.querySelector('[data-repair-view]')?.addEventListener('click', () => {
       const certificado = normalizarCertificado(c);
@@ -5547,10 +5586,11 @@
         form.querySelectorAll('[data-approved-fields] input, [data-approved-fields] textarea, [data-approved-fields] select, [data-approved-fields] button')
           .forEach(el => { el.disabled = !approved; });
         form.elements.conferencia.required = approved;
+        dialogActions.querySelector('[data-repair-save]').textContent = approved ? 'Aprovar correção' : 'Registrar decisão';
       };
       toggle(); form.elements.status.addEventListener('change', toggle);
+      form.addEventListener('submit', e => { e.preventDefault(); dialogActions.querySelector('[data-repair-save]').click(); });
       dialogActions.querySelector('[data-repair-save]').addEventListener('click', e => {
-        if (!form.reportValidity()) return;
         atualizacao('ATUALIZAR_SOLICITACAO_REPARO', {
           status: form.elements.status.value, resposta: form.elements.resposta.value.trim(),
           conferencia: form.elements.conferencia.value.trim(), correcoes: coletarCorrecoesReparo(form),

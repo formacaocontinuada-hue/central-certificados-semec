@@ -30,3 +30,5 @@ body.school-area-page [data-school-dialog]:has(.repair-analysis) [data-dialog-ac
 body.school-area-page [data-school-dialog]:has([data-repair-form], .repair-analysis) .server-button,
 body.school-area-page [data-school-dialog]:has([data-repair-form], .repair-analysis) .server-button:is(:hover, :focus-visible) { box-shadow: none; transform: none; }
 body.school-area-page [data-school-dialog]:has([data-repair-form], .repair-analysis) [data-dialog-actions] { gap: 1rem; margin-top: 1.25rem; }
+
+.repair-action-feedback { flex: 0 0 100%; margin: 0; text-align: left; }
