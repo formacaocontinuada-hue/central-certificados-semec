@@ -153,6 +153,10 @@
       return;
     }
 
+    if (!iframe || event.source !== iframe.contentWindow) {
+      return;
+    }
+
     finish();
     renderResult(payload.resultado || {});
   };

@@ -7,7 +7,6 @@
   <meta name="description" content="Orientações da Central de Certificados da Área da Escola.">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/central-integration.css?v=20261003-padrao-botoes">
-  <link rel="stylesheet" href="css/repair-analysis.css?v=20261003-aprovacao">
   <link rel="icon" type="image/png" href="assents/sem_fundo/brasao_portal_semec.png?v=20261003">
 </head>
 <body class="server-home-page school-area-page school-dashboard-page" data-servidor-protected>
@@ -16,7 +15,7 @@
     
     <aside class="server-sidebar" id="server-sidebar" aria-label="Menu da Área da Escola">
       <div class="server-sidebar__brand">
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-central-main-logo alt="Brasão de Tangará da Serra">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-central-main-logo alt="Identidade do Portal SEMEC">
         <div><strong>Portal SEMEC</strong><span>Área da Escola</span></div>
       </div>
 
@@ -24,12 +23,6 @@
         <div class="server-nav__group">
           <p>Principal</p>
           <a href="index.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15H4V3z"></path><path d="M8 11h8"></path><path d="M8 15h5"></path><path d="M17 3v4h4"></path></svg>Certificados</a>
-        </div>
-
-        <div class="server-nav__group">
-          <p>Acompanhamento</p>
-          <a href="historico-envios.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 7v5l3 2"></path></svg>Histórico de envios</a>
-          <a href="solicitacoes-reparo.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.4 2.4-3-3z"></path></svg>Solicitações de reparo</a>
         </div>
 
         <div class="server-nav__group">
@@ -87,14 +80,14 @@
       <p>Use a pesquisa para localizar certificados da sua unidade ou pesquisar outro servidor pelo nome.</p>
     </article>
     <article class="school-record-row">
-      <span class="school-type">Envio</span>
-      <h3>Enviar ao servidor</h3>
-      <p>Use a opção de envio quando precisar encaminhar o certificado ao servidor por e-mail.</p>
+      <span class="school-type">Correção</span>
+      <h3>Pedir conferência de dados</h3>
+      <p>Em cada certificado, use “Pedir correção” para preparar um e-mail à SEMEC com a identificação do registro e a descrição do problema.</p>
     </article>
     <article class="school-record-row">
-      <span class="school-type">Correção</span>
-      <h3>Solicitar reparo</h3>
-      <p>Quando houver informação que precise de correção, registre uma solicitação de reparo para acompanhamento.</p>
+      <span class="school-type">Relatório individual</span>
+      <h3>Reunir participações e certificados</h3>
+      <p>Depois de localizar o servidor, use “Gerar relatório” para abrir a versão individual pronta para impressão ou salvamento em PDF.</p>
     </article>
   </div>
 </section>
@@ -103,7 +96,7 @@
   <div class="server-section-heading">
     <div><p class="server-kicker">Contato técnico</p><h2>Não encontrou a orientação necessária?</h2></div>
   </div>
-  <p>Envie uma solicitação ao suporte técnico com a descrição do problema.</p>
+  <p>Envie um e-mail à SEMEC com a descrição objetiva do problema. Não informe senha, token ou CPF completo.</p>
   <div class="school-table-actions">
     <a class="server-button server-button--primary" href="entrar-em-contato.html" data-preserve-school>Entrar em Contato</a>
   </div>
@@ -173,6 +166,6 @@
   <script src="js/escolas.js"></script>
   <script src="js/formacoes.js"></script>
   <script src="js/backend.js"></script>
-  <script src="js/app.js?v=20261003-contrato-reparos"></script>
+  <script src="js/app.js?v=20261004-escopo-certificados"></script>
 </body>
 </html>

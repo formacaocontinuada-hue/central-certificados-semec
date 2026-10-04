@@ -7,7 +7,6 @@
   <meta name="description" content="Consulta institucional de certificados da Área da Escola.">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="css/central-integration.css?v=20261003-padrao-botoes">
-  <link rel="stylesheet" href="css/repair-analysis.css?v=20261003-aprovacao">
   <link rel="icon" type="image/png" href="assents/sem_fundo/brasao_portal_semec.png?v=20261003">
 </head>
 <body class="server-home-page school-area-page school-dashboard-page" data-servidor-protected>
@@ -16,7 +15,7 @@
   <div class="server-layout" data-server-app>
     <aside class="server-sidebar" id="server-sidebar" aria-label="Menu da Área da Escola">
       <div class="server-sidebar__brand">
-        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-central-main-logo alt="Brasão de Tangará da Serra">
+        <img src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" data-central-main-logo alt="Identidade do Portal SEMEC">
         <div><strong>Portal SEMEC</strong><span>Área da Escola</span></div>
       </div>
 
@@ -24,12 +23,6 @@
         <div class="server-nav__group">
           <p>Principal</p>
           <a class="is-active" href="index.html" data-preserve-school aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15H4V3z"></path><path d="M8 11h8"></path><path d="M8 15h5"></path><path d="M17 3v4h4"></path></svg>Certificados</a>
-        </div>
-
-        <div class="server-nav__group">
-          <p>Acompanhamento</p>
-          <a href="historico-envios.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"></path><path d="M3 4v5h5"></path><path d="M12 7v5l3 2"></path></svg>Histórico de envios</a>
-          <a href="solicitacoes-reparo.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5 5L3 18l3 3 6.7-6.7a4 4 0 0 0 5-5l-2.4 2.4-3-3z"></path></svg>Solicitações de reparo</a>
         </div>
 
         <div class="server-nav__group">
@@ -97,9 +90,6 @@
             <button class="school-summary-item" type="button" data-summary-action="ano" aria-label="Ir ao filtro de ano">
               <strong data-summary-year>2026</strong><span>Ano selecionado</span>
             </button>
-            <button class="school-summary-item" type="button" data-summary-action="reparos" aria-label="Ver solicitações de reparo em análise">
-              <strong data-summary-repairs>0</strong><span>Reparos em análise</span>
-            </button>
           </section>
 
           <section class="school-page-heading school-page-heading--training">
@@ -147,18 +137,6 @@
 
           </section>
 
-
-          <section class="server-section school-card" id="solicitacoes-reparo" aria-labelledby="repair-list-title" hidden>
-            <div class="server-section-heading school-server-list-header">
-              <div><p class="server-kicker">Acompanhamento</p><h2 id="repair-list-title">Solicitações de reparo</h2></div>
-              <span data-repair-count>0 solicitações</span>
-            </div>
-            <div class="school-compact-empty" data-repair-empty>
-              <strong>Nenhum reparo em análise</strong>
-              <span>As solicitações enviadas pela escola aparecerão aqui para acompanhamento.</span>
-            </div>
-            <div class="school-record-list" data-repair-list></div>
-          </section>
 
           <footer class="server-footer">
             <strong>Portal SEMEC</strong>
@@ -219,6 +197,6 @@
   <script src="js/escolas.js"></script>
   <script src="js/formacoes.js"></script>
   <script src="js/backend.js"></script>
-  <script src="js/app.js?v=20261003-contrato-reparos"></script>
+  <script src="js/app.js?v=20261004-escopo-certificados"></script>
 </body>
 </html>
