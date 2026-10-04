@@ -5,6 +5,7 @@ const { pathToFileURL } = require('node:url');
 const { chromium } = require('playwright');
 
 const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
+const handshakeNonce = new URL(location.href).searchParams.get('central_nonce') || '';
 const channel = new MessageChannel();
 const unidade = { idEscola: 'ESC-000001', tipo: 'SEMEC', nome: 'Departamento de Gestão Pedagógica e Políticas Educacionais - SEMEC' };
 const certificados = [
@@ -30,7 +31,21 @@ channel.port1.onmessage = ({ data }) => {
   channel.port1.postMessage({ canal: 'CENTRAL_CERTIFICADOS_SEMEC', requestId: data.requestId, ok: true, resultado });
 };
 channel.port1.start();
-parent.postMessage({ canal: 'CENTRAL_CERTIFICADOS_SEMEC', tipo: 'BRIDGE_READY', versaoBridge: 'BRIDGE-TESTE' }, '*', [channel.port2]);
+const invalidChannel = new MessageChannel();
+window.top.postMessage({
+  canal: 'CENTRAL_CERTIFICADOS_SEMEC',
+  tipo: 'BRIDGE_READY',
+  versaoBridge: 'BRIDGE-INVALIDA',
+  nonce: 'nonce-invalido'
+}, '*', [invalidChannel.port2]);
+setTimeout(() => {
+  window.top.postMessage({
+    canal: 'CENTRAL_CERTIFICADOS_SEMEC',
+    tipo: 'BRIDGE_READY',
+    versaoBridge: 'BRIDGE-TESTE',
+    nonce: handshakeNonce
+  }, '*', [channel.port2]);
+}, 25);
 <\/script>`;
 
 (async () => {
@@ -40,10 +55,49 @@ parent.postMessage({ canal: 'CENTRAL_CERTIFICADOS_SEMEC', tipo: 'BRIDGE_READY', 
   });
   const page = await browser.newPage({ viewport: { width: 1440, height: 1100 } });
   const pageErrors = [];
+  let receivedHandshakeNonce = '';
   page.on('pageerror', error => pageErrors.push(error.message));
-  await page.route('https://script.google.com/**', route => route.fulfill({
-    status: 200, contentType: 'text/html; charset=utf-8', body: bridgeHtml
-  }));
+  await page.addInitScript(() => {
+    window.__centralBridgeReadyEvents = [];
+    window.addEventListener('message', event => {
+      const message = event.data || {};
+      if (
+        message.canal !== 'CENTRAL_CERTIFICADOS_SEMEC' ||
+        message.tipo !== 'BRIDGE_READY'
+      ) return;
+
+      const outerIframe = document.querySelector('iframe[data-central-bridge]');
+      window.__centralBridgeReadyEvents.push({
+        nonce: String(message.nonce || ''),
+        sameSource: Boolean(
+          outerIframe &&
+          event.source === outerIframe.contentWindow
+        )
+      });
+    });
+  });
+  await page.route('https://script.google.com/**', route => {
+    const requestUrl = new URL(route.request().url());
+    receivedHandshakeNonce =
+      requestUrl.searchParams.get('central_nonce') || '';
+    const nestedUrl =
+      'https://script.googleusercontent.com/bridge-test?central_nonce=' +
+      encodeURIComponent(receivedHandshakeNonce);
+
+    return route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body: '<!doctype html><iframe src="' + nestedUrl + '"></iframe>'
+    });
+  });
+  await page.context().route(
+    'https://script.googleusercontent.com/**',
+    route => route.fulfill({
+      status: 200,
+      contentType: 'text/html; charset=utf-8',
+      body: bridgeHtml
+    })
+  );
   await page.context().route('https://example.test/**', route => route.fulfill({
     status: 200, contentType: 'text/html; charset=utf-8', body: '<title>Certificado de teste</title><p>PDF oficial simulado</p>'
   }));
@@ -52,6 +106,15 @@ parent.postMessage({ canal: 'CENTRAL_CERTIFICADOS_SEMEC', tipo: 'BRIDGE_READY', 
   const pageUrl = file => pathToFileURL(path.join(root, file)).href;
   await page.goto(pageUrl('index.html'), { waitUntil: 'load' });
   await page.locator('[data-central-status][data-state="ready"]').waitFor({ state: 'visible' });
+
+  assert.match(receivedHandshakeNonce, /^[a-f0-9]{48}$/);
+  const bridgeReadyEvents =
+    await page.evaluate(() => window.__centralBridgeReadyEvents);
+  assert.equal(bridgeReadyEvents.length, 2);
+  assert.equal(bridgeReadyEvents[0].nonce, 'nonce-invalido');
+  assert.equal(bridgeReadyEvents[0].sameSource, false);
+  assert.equal(bridgeReadyEvents[1].nonce, receivedHandshakeNonce);
+  assert.equal(bridgeReadyEvents[1].sameSource, false);
 
   assert.equal(
     await page.locator('[data-school-name]').innerText(),
@@ -125,7 +188,10 @@ parent.postMessage({ canal: 'CENTRAL_CERTIFICADOS_SEMEC', tipo: 'BRIDGE_READY', 
   for (const action of ['ENVIAR_CERTIFICADO', 'LISTAR_HISTORICO_ENVIOS', 'SOLICITAR_REPARO', 'LISTAR_SOLICITACOES_REPARO', 'ATUALIZAR_SOLICITACAO_REPARO', 'COMPLEMENTAR_SOLICITACAO_REPARO']) {
     assert.equal(appSource.includes(action), false, `Ação antiga ainda presente: ${action}`);
   }
-  assert.match(fs.readFileSync(path.join(root, 'js', 'backend.js'), 'utf8'), /event\.source !== this\.iframe\.contentWindow/);
+  const backendSource = fs.readFileSync(path.join(root, 'js', 'backend.js'), 'utf8');
+  assert.doesNotMatch(backendSource, /event\.source !== this\.iframe\.contentWindow/);
+  assert.match(backendSource, /message\.nonce/);
+  assert.match(backendSource, /crypto\.getRandomValues/);
   assert.match(fs.readFileSync(path.join(root, 'js', 'validator.js'), 'utf8'), /event\.source !== iframe\.contentWindow/);
   assert.deepEqual(pageErrors, []);
 
