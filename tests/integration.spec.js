@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const http = require('node:http');
 const path = require('node:path');
-const { pathToFileURL } = require('node:url');
 const { chromium } = require('playwright');
 
 const bridgeHtml = `<!doctype html><meta charset="utf-8"><script>
@@ -48,8 +48,35 @@ setTimeout(() => {
 }, 25);
 <\/script>`;
 
+let browser;
+let staticServer;
+
 (async () => {
-  const browser = await chromium.launch({
+  const root = path.resolve(__dirname, '..');
+  const contentTypes = {
+    '.css': 'text/css; charset=utf-8',
+    '.html': 'text/html; charset=utf-8',
+    '.js': 'application/javascript; charset=utf-8',
+    '.png': 'image/png'
+  };
+  staticServer = http.createServer((request, response) => {
+    const requestPath = decodeURIComponent(new URL(request.url, 'http://127.0.0.1').pathname);
+    const relativePath = requestPath === '/' ? 'index.html' : requestPath.replace(/^\/+/, '');
+    const filePath = path.resolve(root, relativePath);
+    if (!filePath.startsWith(`${root}${path.sep}`) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+      response.writeHead(404).end('Arquivo não encontrado.');
+      return;
+    }
+    response.writeHead(200, {
+      'Content-Type': contentTypes[path.extname(filePath).toLowerCase()] || 'application/octet-stream'
+    });
+    fs.createReadStream(filePath).pipe(response);
+  });
+  await new Promise(resolve => staticServer.listen(0, '127.0.0.1', resolve));
+  const serverAddress = staticServer.address();
+  const pageUrl = file => `http://127.0.0.1:${serverAddress.port}/${file}`;
+
+  browser = await chromium.launch({
     headless: true,
     ...(process.env.CENTRAL_BROWSER_PATH ? { executablePath: process.env.CENTRAL_BROWSER_PATH } : {})
   });
@@ -102,8 +129,6 @@ setTimeout(() => {
     status: 200, contentType: 'text/html; charset=utf-8', body: '<title>Certificado de teste</title><p>PDF oficial simulado</p>'
   }));
 
-  const root = path.resolve(__dirname, '..');
-  const pageUrl = file => pathToFileURL(path.join(root, file)).href;
   await page.goto(pageUrl('index.html'), { waitUntil: 'load' });
   await page.locator('[data-central-status][data-state="ready"]').waitFor({ state: 'visible' });
 
@@ -159,12 +184,36 @@ setTimeout(() => {
   const report = await popupPromise;
   await report.waitForLoadState('load');
   assert.equal(await report.title(), 'Relatório de participação 2026 - Rose Maria da Silva');
-  assert.match(await report.locator('body').innerText(), /Relatório individual de participação — 2026/);
-  assert.match(await report.locator('body').innerText(), /Participações localizadas: 2/);
-  assert.match(await report.locator('body').innerText(), /Cargo de concurso: Professora/);
-  assert.equal(await report.locator('thead th').count(), 4);
+  const reportText = await report.locator('body').innerText();
+  assert.match(reportText, /Relatório Individual de Participação e Certificação/i);
+  assert.match(reportText, /Portal SEMEC — Central de Certificados/);
+  assert.match(reportText, /Participações disponíveis: 2/);
+  assert.match(reportText, /Cargo: Professora/);
+  assert.match(reportText, /1\. Formação em Rede/);
+  assert.match(reportText, /2\. Formação do Centro de Ensino/);
+  assert.match(reportText, /3\. Palestras e Seminários/);
+  assert.match(reportText, /Roselaine Mezz/);
+  assert.match(reportText, /Gestora do Portal SEMEC/);
+  assert.doesNotMatch(reportText, /Carga horária total/);
+  assert.doesNotMatch(reportText, /Cargo de concurso/);
+  assert.equal(await report.locator('section.stage').count(), 3);
+  assert.equal(await report.locator('thead th').count(), 8);
   assert.equal(await report.locator('tbody tr').count(), 2);
-  assert.doesNotMatch(await report.locator('body').innerText(), /Certificado não localizado/);
+  assert.equal(await report.locator('img[alt="Brasão do Portal SEMEC"]').count(), 1);
+  assert.equal(await report.locator('img[alt="Assinatura de Roselaine Mezz"]').count(), 1);
+  await report.waitForFunction(() =>
+    Array.from(document.images).every(image => image.complete && image.naturalWidth > 0),
+    null,
+    { timeout: 5000 }
+  );
+  assert.deepEqual(
+    await report.locator('img').evaluateAll(images => images.map(image => image.naturalWidth > 0)),
+    [true, true]
+  );
+  assert.doesNotMatch(reportText, /Certificado não localizado/);
+  if (process.env.CENTRAL_REPORT_SCREENSHOT_PATH) {
+    await report.screenshot({ path: process.env.CENTRAL_REPORT_SCREENSHOT_PATH, fullPage: true });
+  }
   await report.close();
 
   for (const width of [1440, 768, 390]) {
@@ -204,8 +253,13 @@ setTimeout(() => {
   assert.deepEqual(pageErrors, []);
 
   await browser.close();
+  browser = null;
+  await new Promise(resolve => staticServer.close(resolve));
+  staticServer = null;
   process.stdout.write('Consulta, relatório anual por pessoa, orientação via 1Doc e controles de segurança validados.\n');
-})().catch(error => {
+})().catch(async error => {
+  if (browser) await browser.close().catch(() => {});
+  if (staticServer) await new Promise(resolve => staticServer.close(resolve));
   process.stderr.write(`${error.stack || error}\n`);
   process.exitCode = 1;
 });

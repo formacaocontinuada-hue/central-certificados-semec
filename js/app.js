@@ -12,6 +12,12 @@
       window.location.href
     ).href;
 
+  const portalManagerSignature =
+    new URL(
+      'assents/sem_fundo/assinatura_roselaine_mezz.png',
+      window.location.href
+    ).href;
+
   const centralMainLogo =
     portalMainLogo ||
     municipioMainLogo;
@@ -3743,6 +3749,29 @@
     '2026';
 
 
+  const ETAPAS_RELATORIO_PARTICIPACAO =
+    Object.freeze([
+      {
+        id:
+          'FORMACAO_REDE',
+        nome:
+          'Formação em Rede'
+      },
+      {
+        id:
+          'FORMACAO_CENTRO_ENSINO',
+        nome:
+          'Formação do Centro de Ensino'
+      },
+      {
+        id:
+          'PALESTRAS_SEMINARIOS',
+        nome:
+          'Palestras e Seminários'
+      }
+    ]);
+
+
   const participacoesDoServidor = (
     nome
   ) => {
@@ -3834,6 +3863,103 @@
   };
 
 
+  const carregarImagemNoRelatorio = async (
+    image,
+    url
+  ) => {
+
+    try {
+
+      const response =
+        await fetch(
+          url,
+          {
+            cache:
+              'force-cache'
+          }
+        );
+
+
+      if (
+        !response.ok
+      ) {
+        throw new Error(
+          `Imagem indisponível: ${response.status}`
+        );
+      }
+
+
+      const blob =
+        await response.blob();
+
+
+      const dataUrl =
+        await new Promise(
+          (
+            resolve,
+            reject
+          ) => {
+
+            const reader =
+              new FileReader();
+
+
+            reader.addEventListener(
+              'load',
+              () =>
+                resolve(
+                  reader.result
+                ),
+              {
+                once:
+                  true
+              }
+            );
+
+
+            reader.addEventListener(
+              'error',
+              reject,
+              {
+                once:
+                  true
+              }
+            );
+
+
+            reader.readAsDataURL(
+              blob
+            );
+          }
+        );
+
+
+      image.src =
+        dataUrl;
+
+
+      if (
+        typeof image.decode ===
+        'function'
+      ) {
+        await image.decode();
+      }
+
+
+      return true;
+    } catch (
+      error
+    ) {
+
+      image.src =
+        url;
+
+
+      return false;
+    }
+  };
+
+
   const gerarRelatorioServidor = (
     nome
   ) => {
@@ -3869,38 +3995,19 @@
       'Servidor';
 
 
-    const cargaHorariaTotal =
-      participacoes.reduce(
-        (
-          total,
-          participacao
-        ) => {
-
-          const numero =
-            String(
-              participacao
-                .cargaHoraria ||
-              ''
+    const unidades =
+      Array.from(
+        new Set(
+          participacoes
+            .map(
+              participacao =>
+                participacao
+                  .unidadeNome
             )
-              .replace(
-                ',',
-                '.'
-              )
-              .match(
-                /\d+(?:\.\d+)?/
-              );
-
-
-          return total +
-            (
-              numero
-                ? Number(
-                    numero[0]
-                  )
-                : 0
-            );
-        },
-        0
+            .filter(
+              Boolean
+            )
+        )
       );
 
 
@@ -3935,10 +4042,6 @@
     }
 
 
-    popup.opener =
-      null;
-
-
     const doc =
       popup.document;
 
@@ -3954,17 +4057,29 @@
 
 
     style.textContent =
-      'body{font:14px/1.5 Arial,sans-serif;color:#09224d;margin:0;padding:32px;background:#fff}' +
-      'main{max-width:980px;margin:0 auto}' +
-      'header{display:flex;align-items:center;gap:18px;border-bottom:3px solid #062a5a;padding-bottom:18px;margin-bottom:24px}' +
-      'header img{width:82px;height:82px;object-fit:contain}' +
-      'h1{font-size:24px;margin:0}h2{font-size:18px;margin:26px 0 10px}' +
+      '@page{size:A4;margin:14mm}' +
+      'body{font:12.5px/1.45 Arial,sans-serif;color:#09224d;margin:0;padding:28px;background:#fff}' +
+      'main{max-width:190mm;margin:0 auto}' +
+      'header{display:flex;align-items:center;gap:18px;border-bottom:3px solid #062a5a;padding-bottom:16px;margin-bottom:18px}' +
+      '.portal-logo{width:92px;height:92px;object-fit:contain;flex:0 0 auto}' +
+      '.brand{min-width:0}.brand p{margin:2px 0}.brand-name{color:#062a5a;font-size:15px;font-weight:800}' +
+      'h1{font-size:19px;line-height:1.25;margin:8px 0 0;text-transform:uppercase}' +
+      'h2{font-size:16px;margin:0 0 10px}' +
       'p{margin:4px 0}.meta{color:#58708d}' +
-      'table{width:100%;border-collapse:collapse;margin-top:12px}' +
-      'th,td{border:1px solid #c8d9ec;padding:9px;text-align:left;vertical-align:top}' +
-      'th{background:#eaf4ff}' +
-      '.actions{margin:24px 0}.actions button{background:#062a5a;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}' +
-      '.note{margin-top:22px;padding-top:14px;border-top:1px solid #c8d9ec;color:#58708d}' +
+      '.identification{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;padding:13px 15px;border:1px solid #c8d9ec;border-radius:7px;background:#f8fbff;margin-bottom:18px}' +
+      '.identification p{margin:0}.identification .wide{grid-column:1/-1}' +
+      '.stage{break-inside:avoid;margin-top:18px}.stage h2{padding:8px 10px;border-left:4px solid #e2a61a;background:#eef6ff;color:#062a5a}' +
+      'table{width:100%;border-collapse:collapse;margin-top:9px}' +
+      'th,td{border:1px solid #c8d9ec;padding:8px;text-align:left;vertical-align:top}' +
+      'th{background:#eaf4ff}.empty-stage{padding:10px;border:1px dashed #c8d9ec;color:#58708d}' +
+      '.official-note{margin-top:22px;padding:14px;border:1px solid #c8d9ec;border-radius:7px;background:#f8fbff;color:#294b70;text-align:justify}' +
+      '.official-note h2{text-align:left}.source{font-size:11.5px;color:#58708d}' +
+      '.signature-block{display:grid;justify-items:center;margin:28px auto 10px;text-align:center;break-inside:avoid}' +
+      '.signature-block img{display:block;width:230px;max-width:70%;height:92px;object-fit:contain;margin-bottom:-4px}' +
+      '.signature-block strong{font-size:14px}.signature-block span{display:block;color:#294b70}' +
+      '.actions{margin:24px 0;text-align:center}.actions button{background:#062a5a;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}.actions button:disabled{cursor:wait;opacity:.68}' +
+      '.document-footer{margin-top:16px;padding-top:10px;border-top:1px solid #c8d9ec;color:#58708d;font-size:11px;text-align:center}' +
+      '@media(max-width:700px){body{padding:18px}.identification{grid-template-columns:1fr}.identification .wide{grid-column:auto}header{align-items:flex-start}.portal-logo{width:72px;height:72px}}' +
       '@media print{body{padding:0}.actions{display:none}}';
 
 
@@ -3992,11 +4107,15 @@
 
 
     crest.src =
-      municipioMainLogo;
+      portalMainLogo;
 
 
     crest.alt =
-      'Brasão da Prefeitura de Tangará da Serra';
+      'Brasão do Portal SEMEC';
+
+
+    crest.className =
+      'portal-logo';
 
 
     const heading =
@@ -4005,10 +4124,38 @@
       );
 
 
+    heading.className =
+      'brand';
+
+
     adicionarTextoRelatorio(
       heading,
       'p',
-      'Secretaria Municipal de Educação de Tangará da Serra',
+      'Portal SEMEC — Central de Certificados',
+      'brand-name'
+    );
+
+
+    adicionarTextoRelatorio(
+      heading,
+      'p',
+      'Prefeitura Municipal de Tangará da Serra — MT',
+      'meta'
+    );
+
+
+    adicionarTextoRelatorio(
+      heading,
+      'p',
+      'Secretaria Municipal de Educação — SEMEC',
+      'meta'
+    );
+
+
+    adicionarTextoRelatorio(
+      heading,
+      'p',
+      'Departamento Pedagógico',
       'meta'
     );
 
@@ -4016,7 +4163,7 @@
     adicionarTextoRelatorio(
       heading,
       'h1',
-      'Relatório individual de participação — 2026'
+      'Relatório Individual de Participação e Certificação'
     );
 
 
@@ -4031,144 +4178,219 @@
     );
 
 
+    const identification =
+      doc.createElement(
+        'section'
+      );
+
+
+    identification.className =
+      'identification';
+
+
     adicionarTextoRelatorio(
-      main,
+      identification,
       'p',
-      `Servidor: ${nome}`
+      `Nome completo: ${nome}`
     );
 
 
     adicionarTextoRelatorio(
-      main,
+      identification,
       'p',
-      `Cargo de concurso: ${cargo}`
+      `Cargo: ${cargo}`
     );
 
 
     adicionarTextoRelatorio(
-      main,
+      identification,
       'p',
       `Ano de referência: ${ANO_RELATORIO_PARTICIPACAO}`
     );
 
 
     adicionarTextoRelatorio(
-      main,
+      identification,
       'p',
-      `Participações localizadas: ${participacoes.length}`
+      `Participações disponíveis: ${participacoes.length}`
     );
 
 
-    adicionarTextoRelatorio(
-      main,
-      'p',
-      `Carga horária total localizada: ${new Intl.NumberFormat('pt-BR', {
-        maximumFractionDigits: 2
-      }).format(cargaHorariaTotal)} h`
-    );
-
-
-    adicionarTextoRelatorio(
-      main,
-      'p',
-      `Gerado em ${new Intl.DateTimeFormat('pt-BR', {
-        dateStyle: 'long',
-        timeStyle: 'short'
-      }).format(new Date())}`,
-      'meta'
-    );
-
-
-    adicionarTextoRelatorio(
-      main,
-      'h2',
-      'Participações em formações e eventos'
-    );
-
-
-    const table =
-      doc.createElement(
-        'table'
+    const unidadesLinha =
+      adicionarTextoRelatorio(
+        identification,
+        'p',
+        `Unidade(s) vinculada(s) aos registros: ${unidades.join('; ') || 'Não informada'}`
       );
 
 
-    const thead =
-      doc.createElement(
-        'thead'
+    unidadesLinha.className =
+      'wide';
+
+
+    const emissaoLinha =
+      adicionarTextoRelatorio(
+        identification,
+        'p',
+        `Data e hora de emissão: ${new Intl.DateTimeFormat('pt-BR', {
+          dateStyle: 'long',
+          timeStyle: 'short'
+        }).format(new Date())}`,
+        'meta'
       );
 
 
-    const headRow =
-      doc.createElement(
-        'tr'
-      );
+    emissaoLinha.classList.add(
+      'wide'
+    );
 
 
-    [
-      'Formação ou evento',
-      'Unidade vinculada',
-      'Carga horária',
-      'Situação do registro'
-    ].forEach(
-      label =>
+    main.appendChild(
+      identification
+    );
+
+
+    ETAPAS_RELATORIO_PARTICIPACAO.forEach(
+      (
+        etapa,
+        indice
+      ) => {
+
+        const section =
+          doc.createElement(
+            'section'
+          );
+
+
+        section.className =
+          'stage';
+
+
         adicionarTextoRelatorio(
-          headRow,
-          'th',
-          label
-        )
-    );
+          section,
+          'h2',
+          `${indice + 1}. ${etapa.nome}`
+        );
 
 
-    thead.appendChild(
-      headRow
-    );
+        const participacoesDaEtapa =
+          participacoes.filter(
+            participacao =>
+              participacao.formacaoId ===
+                etapa.id
+          );
 
 
-    const tbody =
-      doc.createElement(
-        'tbody'
-      );
+        if (
+          participacoesDaEtapa.length ===
+          0
+        ) {
+
+          adicionarTextoRelatorio(
+            section,
+            'p',
+            'Nenhuma participação disponível nesta etapa até a data de emissão.',
+            'empty-stage'
+          );
+
+          main.appendChild(
+            section
+          );
+
+          return;
+        }
 
 
-    participacoes.forEach(
-      participacao => {
+        const table =
+          doc.createElement(
+            'table'
+          );
 
-        const row =
+
+        const thead =
+          doc.createElement(
+            'thead'
+          );
+
+
+        const headRow =
           doc.createElement(
             'tr'
           );
 
 
         [
-          participacao.formacaoNome,
-          participacao.unidadeNome,
-          participacao.cargaHoraria,
-          participacao.situacao
+          'Formação ou evento',
+          'Unidade vinculada',
+          'Carga horária',
+          'Situação do registro'
         ].forEach(
-          value =>
+          label =>
             adicionarTextoRelatorio(
-              row,
-              'td',
-              value
+              headRow,
+              'th',
+              label
             )
         );
 
 
-        tbody.appendChild(
-          row
+        thead.appendChild(
+          headRow
+        );
+
+
+        const tbody =
+          doc.createElement(
+            'tbody'
+          );
+
+
+        participacoesDaEtapa.forEach(
+          participacao => {
+
+            const row =
+              doc.createElement(
+                'tr'
+              );
+
+
+            [
+              participacao.formacaoNome,
+              participacao.unidadeNome,
+              participacao.cargaHoraria,
+              participacao.situacao
+            ].forEach(
+              value =>
+                adicionarTextoRelatorio(
+                  row,
+                  'td',
+                  value
+                )
+            );
+
+
+            tbody.appendChild(
+              row
+            );
+          }
+        );
+
+
+        table.append(
+          thead,
+          tbody
+        );
+
+
+        section.appendChild(
+          table
+        );
+
+
+        main.appendChild(
+          section
         );
       }
-    );
-
-
-    table.append(
-      thead,
-      tbody
-    );
-
-
-    main.appendChild(
-      table
     );
 
 
@@ -4193,7 +4415,11 @@
 
 
     printButton.textContent =
-      'Imprimir ou salvar em PDF';
+      'Preparando relatório...';
+
+
+    printButton.disabled =
+      true;
 
 
     printButton.addEventListener(
@@ -4208,21 +4434,156 @@
     );
 
 
+    const officialNote =
+      doc.createElement(
+        'section'
+      );
+
+
+    officialNote.className =
+      'official-note';
+
+
+    adicionarTextoRelatorio(
+      officialNote,
+      'h2',
+      'Informações sobre o documento'
+    );
+
+
+    adicionarTextoRelatorio(
+      officialNote,
+      'p',
+      'Documento oficial de consulta emitido pela Central de Certificados do Portal SEMEC, elaborado com base nos registros institucionais disponíveis na data de sua emissão. As informações apresentadas refletem os dados de eventos e formações, participação, presença e certificação mantidos pela Secretaria Municipal de Educação de Tangará da Serra — MT. Caso sejam identificadas divergências, omissões ou possíveis erros, a solicitação de análise e correção deverá ser formalizada exclusivamente pelo 1Doc, com identificação do servidor, do evento ou formação e descrição objetiva da inconsistência, para apreciação do setor responsável.'
+    );
+
+
+    adicionarTextoRelatorio(
+      officialNote,
+      'p',
+      'Fonte das informações: dados consolidados a partir das bases institucionais de registro de eventos e formações, participação, presença e certificação mantidas pela Secretaria Municipal de Educação de Tangará da Serra — MT.',
+      'source'
+    );
+
+
+    adicionarTextoRelatorio(
+      officialNote,
+      'p',
+      'Novos registros serão incorporados ao relatório à medida que forem disponibilizados na Central. Este relatório não substitui os certificados individuais.',
+      'source'
+    );
+
+
     main.appendChild(
-      actions
+      officialNote
+    );
+
+
+    const signatureBlock =
+      doc.createElement(
+        'section'
+      );
+
+
+    signatureBlock.className =
+      'signature-block';
+
+
+    const signatureImage =
+      doc.createElement(
+        'img'
+      );
+
+
+    signatureImage.src =
+      portalManagerSignature;
+
+
+    signatureImage.alt =
+      'Assinatura de Roselaine Mezz';
+
+
+    signatureBlock.appendChild(
+      signatureImage
+    );
+
+
+    adicionarTextoRelatorio(
+      signatureBlock,
+      'strong',
+      'Roselaine Mezz'
+    );
+
+
+    adicionarTextoRelatorio(
+      signatureBlock,
+      'span',
+      'Gestora do Portal SEMEC'
+    );
+
+
+    adicionarTextoRelatorio(
+      signatureBlock,
+      'span',
+      'Departamento Pedagógico — SEMEC'
+    );
+
+
+    adicionarTextoRelatorio(
+      signatureBlock,
+      'span',
+      'Tangará da Serra — MT'
+    );
+
+
+    main.appendChild(
+      signatureBlock
     );
 
 
     adicionarTextoRelatorio(
       main,
       'p',
-      'Relatório informativo gerado pela Central de Certificados do Portal SEMEC com base nas participações disponíveis no momento da consulta. Novos registros serão incorporados automaticamente à medida que forem incluídos na Central. Este relatório não substitui os certificados individuais.',
-      'note'
+      'Documento gerado eletronicamente pela Central de Certificados do Portal SEMEC.',
+      'document-footer'
+    );
+
+
+    main.appendChild(
+      actions
     );
 
 
     doc.body.replaceChildren(
       main
+    );
+
+
+    Promise.all(
+      [
+        carregarImagemNoRelatorio(
+          crest,
+          portalMainLogo
+        ),
+        carregarImagemNoRelatorio(
+          signatureImage,
+          portalManagerSignature
+        )
+      ]
+    ).finally(
+      () => {
+
+        popup.opener =
+          null;
+
+
+        printButton.disabled =
+          false;
+
+
+        printButton.textContent =
+          'Imprimir ou salvar em PDF';
+      }
     );
 
 
