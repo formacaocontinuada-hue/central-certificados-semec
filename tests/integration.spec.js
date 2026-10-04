@@ -9,8 +9,8 @@ const handshakeNonce = new URL(location.href).searchParams.get('central_nonce') 
 const channel = new MessageChannel();
 const unidade = { idEscola: 'ESC-000001', tipo: 'SEMEC', nome: 'Departamento de Gestão Pedagógica e Políticas Educacionais - SEMEC' };
 const certificados = [
-  { idCertificado: 'CERT-1', nomeServidor: 'Rose Maria da Silva', formacaoId: 'FORMACAO_REDE', unidadeNome: 'CME Atacílio de Souza', cargaHoraria: 20, ano: '2026', situacao: 'ATIVO', urlPdf: 'https://example.test/cert-1.pdf' },
-  { certificadoId: 'CERT-2', servidor: { nome: 'João de Souza' }, formacao: { id: 'PALESTRAS_SEMINARIOS' }, unidade: { nome: 'CME Dona Nena' }, horas: '8h', exercicio: 2026, status: 'SUBSTITUIDO', arquivo: { url: 'https://example.test/cert-2.pdf' } }
+  { idCertificado: 'CERT-1', nomeServidor: 'Rose Maria da Silva', cargo: 'Professora', formacaoId: 'FORMACAO_REDE', unidadeNome: 'CME Atacílio de Souza', cargaHoraria: 20, ano: '2026', situacao: 'ATIVO', urlPdf: 'https://example.test/cert-1.pdf' },
+  { certificadoId: 'CERT-2', servidor: { nome: 'João de Souza', funcao: 'Técnico Administrativo' }, formacao: { id: 'PALESTRAS_SEMINARIOS' }, unidade: { nome: 'CME Dona Nena' }, horas: '8h', exercicio: 2026, status: 'SUBSTITUIDO', arquivo: { url: 'https://example.test/cert-2.pdf' } }
 ];
 channel.port1.onmessage = ({ data }) => {
   let resultado;
@@ -124,6 +124,7 @@ setTimeout(() => {
   assert.equal(await page.locator('[data-summary-active]').innerText(), '1');
   assert.equal(await page.locator('[data-summary-people]').innerText(), '1');
   assert.deepEqual(await page.locator('[data-existing-results] h3').allTextContents(), ['Rose Maria da Silva', 'João de Souza']);
+  assert.deepEqual(await page.locator('[data-existing-results] .school-type').allTextContents(), ['Professora', 'Técnico Administrativo']);
   assert.equal(await page.locator('[data-certificate-report]').count(), 2);
   assert.equal(await page.locator('[data-certificate-correction]').count(), 2);
   assert.equal(await page.locator('[data-certificate-send], [data-certificate-repair]').count(), 0);

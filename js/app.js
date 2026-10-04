@@ -1831,6 +1831,44 @@
         ).trim(),
 
 
+      cargo:
+        String(
+
+          (
+            servidor &&
+            typeof servidor ===
+              'object'
+              ? primeiroValor(
+                  servidor,
+                  'cargo',
+                  'cargoNome',
+                  'nomeCargo',
+                  'funcao',
+                  'funcaoNome',
+                  'nomeFuncao',
+                  'cargoFuncao'
+                )
+              : ''
+          ) ||
+
+          primeiroValor(
+            registro,
+            'cargo',
+            'cargoNome',
+            'nomeCargo',
+            'cargoServidor',
+            'funcao',
+            'funcaoNome',
+            'nomeFuncao',
+            'funcaoServidor',
+            'cargoFuncao'
+          ) ||
+
+          'Servidor'
+
+        ).trim(),
+
+
       formacaoId:
         formacaoNormalizada
           .id,
@@ -2243,7 +2281,7 @@
 
 
     type.textContent =
-      'Servidor';
+      certificado.cargo;
 
 
     const title =
