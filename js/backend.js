@@ -3,10 +3,17 @@
 
   const CHANNEL = 'CENTRAL_CERTIFICADOS_SEMEC';
   const BRIDGE_URL = 'https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwBzokI4suZwZmEOJilCJ2N6y7PfWEH26hlJaYdfqCYb6m6VO7JK_-ktGwMlO2MYus/exec';
+  const HANDSHAKE_PARAM = 'central_nonce';
   const READY_TIMEOUT_MS = 10000;
   const REQUEST_TIMEOUT_MS = 20000;
 
   const createRequestId = () => `req_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+  const createHandshakeNonce = () => {
+    const bytes = new Uint8Array(24);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  };
 
   const isTrustedBridgeOrigin = (origin) => {
     try {
@@ -36,6 +43,7 @@
       this.iframe = null;
       this.port = null;
       this.version = '';
+      this.handshakeNonce = '';
       this.pending = new Map();
       this.connectionPromise = null;
       this.handleWindowMessage = this.handleWindowMessage.bind(this);
@@ -76,7 +84,10 @@
       this.iframe?.remove();
 
       const iframe = document.createElement('iframe');
-      iframe.src = this.url;
+      const bridgeUrl = new URL(this.url, window.location.href);
+      this.handshakeNonce = createHandshakeNonce();
+      bridgeUrl.searchParams.set(HANDSHAKE_PARAM, this.handshakeNonce);
+      iframe.src = bridgeUrl.href;
       iframe.title = 'Ponte técnica da Central de Certificados';
       iframe.dataset.centralBridge = '';
       iframe.setAttribute('aria-hidden', 'true');
@@ -90,7 +101,7 @@
       const message = event.data || {};
       if (message.canal !== CHANNEL || message.tipo !== 'BRIDGE_READY') return;
       if (!isTrustedBridgeOrigin(event.origin)) return;
-      if (!this.iframe || event.source !== this.iframe.contentWindow) return;
+      if (!this.handshakeNonce || String(message.nonce || '') !== this.handshakeNonce) return;
 
       const port = event.ports && event.ports[0];
       if (!port) {
