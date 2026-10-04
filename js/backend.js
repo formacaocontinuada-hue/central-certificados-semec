@@ -90,6 +90,7 @@
       const message = event.data || {};
       if (message.canal !== CHANNEL || message.tipo !== 'BRIDGE_READY') return;
       if (!isTrustedBridgeOrigin(event.origin)) return;
+      if (!this.iframe || event.source !== this.iframe.contentWindow) return;
 
       const port = event.ports && event.ports[0];
       if (!port) {

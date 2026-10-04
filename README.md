@@ -1,100 +1,58 @@
-# Central de Certificados SEMEC — visual aprovado + backend
+# Central de Certificados — Portal SEMEC
 
-Esta versão mantém o visual aprovado da Área da Escola, os brasões já disponíveis e a integração validada com o backend institucional.
+Área institucional de consulta de participações e certificados da Secretaria Municipal de Educação de Tangará da Serra.
 
-- Identificação automática da unidade e do perfil de acesso pelo Bridge.
-- Listagem e pesquisa no `REGISTRO_CERTIFICADOS_2026`.
-- Abertura e download do PDF quando o registro oficial fornece o link.
-- Envio confirmado por e-mail, com anexo quando disponível e auditoria no backend.
-- Histórico de envios com destinatário mascarado na interface.
-- Solicitações de reparo com protocolo e acompanhamento de status.
-- Estados reais de carregamento, lista vazia, erro e nova tentativa.
-- A antiga tela técnica permanece disponível em `teste-backend.html`.
+## Escopo atual
 
-- 33 brasões/identidades específicas de unidades.
-- Identidade geral da Educação Escolar Indígena como fallback para escola indígena sem brasão próprio.
-- Brasão municipal como fallback para escola não indígena ainda sem brasão.
-- Vínculo visual por ID estável da unidade em `js/escolas.js`.
-- Para pré-visualizar localmente outra escola, use `index.html?escola=ESC-000009` e troque o ID.
+A Central existe para:
 
-Brasões não indígenas ainda faltantes:
-ESC-000002, ESC-000012, ESC-000024 e ESC-000035.
+- validar o acesso institucional e identificar a unidade;
+- pesquisar qualquer servidor pelo nome;
+- consultar participações e certificados;
+- visualizar e baixar certificados existentes;
+- gerar relatório individual de participação e certificação, pronto para impressão ou salvamento em PDF;
+- encaminhar dúvidas e pedidos de correção por e-mail à SEMEC.
 
-Observação: o parâmetro `?escola=` é somente para teste visual. Em produção, a unidade definida pela autenticação institucional no backend sempre prevalece.
+Não fazem parte desta etapa: fluxo interno de solicitações, painel de análise, aprovação de reparos, pedido de complemento, acompanhamento de status, correção ou reemissão. O botão **Pedir correção** apenas prepara um e-mail identificado; nenhuma solicitação é gravada no backend do Portal.
 
+## Identidade visual
 
-## Regra de nomenclatura das formações
-A interface não deve exibir "Etapa 1", "Etapa 2" ou "Etapa 3".
-Devem aparecer os nomes das formações:
-- Formação em Rede
-- Formação do Centro de Ensino
-- Palestras e Seminários
+Os arquivos têm funções diferentes e não devem ser trocados:
 
-O filtro de ano da interface foi mantido somente com 2026.
+- `assents/sem_fundo/brasao_portal_semec.png`: identidade própria do Portal SEMEC, usada na navegação e no ícone das páginas;
+- `assents/sem_fundo/brasao_tangara.png`: brasão oficial da Prefeitura de Tangará da Serra, usado para representar a Prefeitura/SEMEC e como fallback institucional das unidades.
 
-## Identificadores permanentes das formações
-A numeração de etapa não faz parte da interface nem deve ser usada como identificador permanente.
+Os brasões específicos das unidades continuam vinculados por ID estável em `js/escolas.js`. O parâmetro `?escola=` serve somente para pré-visualização; em produção, a unidade autenticada pelo backend prevalece.
 
-Usar:
-- `FORMACAO_REDE` → Formação em Rede
-- `FORMACAO_CENTRO_ENSINO` → Formação do Centro de Ensino
-- `PALESTRAS_SEMINARIOS` → Palestras e Seminários
+## Integração
 
-Se a ordem/número das etapas mudar durante o ano, a interface permanece correta.
+As únicas ações de backend usadas pela área principal são:
 
-## Ajustes de interface
-- Nome institucional exibido: **Secretaria Municipal de Educação de Tangará da Serra**.
-- O resultado da pesquisa é exibido imediatamente abaixo do formulário de busca.
-- A lista de certificados já disponíveis permanece separada e não é escondida pela pesquisa.
+- `IDENTIFICAR_UNIDADE`;
+- `LISTAR_CERTIFICADOS`;
+- `BUSCAR_CERTIFICADOS`;
+- `REGISTRAR_ACESSO_CERTIFICADO`.
 
-## Páginas de apoio integradas
-Conteúdo reaproveitado das páginas já existentes do Portal SEMEC:
-- `ajuda.html`: base de Ajuda.
-- `entrar-em-contato.html`: conteúdo do Contato Técnico + canais institucionais da página pública de Contato.
-- `politica-privacidade.html`: mantém o status **Diretrizes em consolidação**; não foi tratada como política final.
-- `acessibilidade.html`: mantém somente os compromissos e orientações já presentes na página original.
+A comunicação ocorre por um iframe do Apps Script e uma `MessagePort`. A página valida tanto a origem Google quanto a janela exata do iframe antes de aceitar o canal.
 
-O menu de Assistência inclui: Ajuda, Entrar em Contato, Política de Privacidade e Acessibilidade.
+O validador público permanece separado em `validar-certificado.html` e exige o ID do certificado e o código completo de autenticidade. A resposta pública não deve expor CPF, matrícula, e-mail, ID interno do servidor, ID do Drive, observações internas ou o hash completo.
 
-## Navegação interna e menu hambúrguer
-O menu usa o mesmo contrato do Portal SEMEC:
-- inicia fechado também no desktop;
-- abre como painel lateral;
-- usa backdrop;
-- o botão se transforma em fechar;
-- fecha ao clicar em item, backdrop, redimensionar, trocar hash ou sair da página.
+## Interface preservada
 
-Páginas de acompanhamento:
-- `historico-envios.html`
-- `solicitacoes-reparo.html`
+O projeto mantém o padrão visual aprovado do Portal SEMEC, a navegação lateral, os estados de carregamento/erro/lista vazia, os brasões das unidades e as páginas de Ajuda, Contato, Privacidade e Acessibilidade.
 
-O botão `Sair` usa a mesma confirmação visual do Portal e encerra a visualização local no navegador. A autenticação institucional continua sendo controlada pela conta Google reconhecida pelo backend.
+Os nomes estáveis das formações são:
 
-Os fluxos de envio, histórico e reparo exigem a implantação da etapa de ações no mesmo Web App do Apps Script. O pacote correspondente fica fora do conteúdo público do GitHub Pages para não expor a implementação interna do backend.
+- `FORMACAO_REDE` — Formação em Rede;
+- `FORMACAO_CENTRO_ENSINO` — Formação do Centro de Ensino;
+- `PALESTRAS_SEMINARIOS` — Palestras e Seminários.
 
+## Validação local
 
-## Validador público
-A página `validar-certificado.html` consulta o registro oficial por meio de um Web App público separado do backend institucional da Central.
+O teste usa dados fictícios e uma ponte simulada; não acessa a base institucional:
 
-- Configuração do endpoint em `js/validator-config.js`.
-- Validação exige `ID_CERTIFICADO` + código de autenticidade completo.
-- A resposta pública não expõe CPF, matrícula, e-mail, ID_SRV, ID do Drive, observações internas ou o hash completo.
-- Estados tratados na interface: válido, substituído, cancelado, inativo, inválido e erro.
-- A URL pública usada nos QR Codes permanece a do GitHub Pages; o Web App pode ser trocado internamente sem reemitir os certificados.
+```text
+node tests/integration.spec.js
+```
 
-## Análise de solicitações de reparo
-
-A SEMEC consulta o certificado relacionado e o histórico, confere a solicitação e registra a decisão. Aprovar significa **Aprovada para correção**: o certificado continua aguardando a futura etapa de reemissão.
-
-- Situações: Nova, Em análise, Aguardando informação, Aprovada para correção, Indeferida e Cancelada.
-- A unidade solicitante acompanha as decisões e envia informações complementares pela própria solicitação; o complemento retorna o caso para Em análise.
-- A aprovação registra os campos a corrigir, os novos valores, a fonte conferida e a justificativa.
-- Cada atualização possui versão, conta responsável, data e histórico. Uma tela desatualizada não pode sobrescrever uma decisão posterior.
-- Os registros anteriores permanecem preservados, identificados como pertencentes ao fluxo anterior quando necessário.
-- O filtro por situação e a paginação permitem consultar todas as solicitações disponíveis ao perfil.
-
-Esta proposta depende de atualização do serviço institucional antes da aplicação. O pacote de aplicação foi entregue separadamente.
-
-Os dados de emissão disponíveis não substituem a comprovação da correção. A análise informa os dados que ainda precisam ser conferidos e permite pedir complemento. O link opcional de comprovante mantém as permissões do documento de origem.
-
-Validação da interface existente: `node tests/integration.spec.js`, com ponte simulada. O teste usa dados fictícios e não acessa a base institucional. A validação do serviço institucional foi realizada separadamente.
+Ele verifica autenticação simulada, listagem, pesquisa por nome, relatório individual, modal de correção por e-mail, ausência das ações antigas, responsividade e validação da origem/janela dos serviços.

@@ -91,8 +91,7 @@ body.school-area-page .school-unit-card__logo img {
 [data-central-logged-out][hidden],
 [data-school-dialog][hidden],
 [data-server-logout-dialog][hidden],
-#search-results[hidden],
-#solicitacoes-reparo[hidden] {
+#search-results[hidden] {
   display: none !important;
 }
 
