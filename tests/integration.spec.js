@@ -123,10 +123,10 @@ setTimeout(() => {
   assert.equal(await page.locator('[data-existing-count]').innerText(), '2 certificados');
   assert.equal(await page.locator('[data-summary-active]').innerText(), '1');
   assert.equal(await page.locator('[data-summary-people]').innerText(), '1');
-  assert.deepEqual(await page.locator('[data-existing-results] h3').allTextContents(), ['Rose Maria da Silva', 'João de Souza']);
-  assert.deepEqual(await page.locator('[data-existing-results] .school-type').allTextContents(), ['Professora', 'Técnico Administrativo']);
-  assert.equal(await page.locator('[data-certificate-report]').count(), 2);
-  assert.equal(await page.locator('[data-certificate-correction]').count(), 2);
+  assert.deepEqual(await page.locator('[data-existing-results] .school-person-report-header h3').allTextContents(), ['Rose Maria da Silva', 'João de Souza']);
+  assert.deepEqual(await page.locator('[data-existing-results] .school-person-report-header .school-type').allTextContents(), ['Professora', 'Técnico Administrativo']);
+  assert.equal(await page.locator('[data-person-report]').count(), 2);
+  assert.equal(await page.locator('[data-certificate-correction]').count(), 0);
   assert.equal(await page.locator('[data-certificate-send], [data-certificate-repair]').count(), 0);
   assert.equal(await page.getByText('Solicitações de reparo').count(), 0);
   assert.equal(await page.getByText('Histórico de envios').count(), 0);
@@ -151,21 +151,20 @@ setTimeout(() => {
   await page.locator('[data-search-results-list] h3').first().waitFor({ state: 'visible' });
   assert.equal(await page.locator('[data-search-result-count]').innerText(), '2 certificados');
 
-  await page.locator('[data-search-results-list] [data-certificate-correction="CERT-1"]').click();
-  await page.locator('[data-correction-email-form]').waitFor({ state: 'visible' });
-  assert.match(await page.locator('[data-correction-summary]').innerText(), /Formação em Rede.*CME Atacílio de Souza.*CERT-1/);
-  assert.equal(await page.getByRole('button', { name: 'Preparar e-mail' }).count(), 1);
-  await page.getByRole('button', { name: 'Cancelar' }).click();
+  assert.equal(await page.locator('[data-search-results-list] [data-certificate-correction]').count(), 0);
+  assert.equal(await page.locator('[data-search-results-list] [data-person-report]').count(), 1);
 
   const popupPromise = page.waitForEvent('popup');
-  await page.locator('[data-search-results-list] [data-certificate-report]').first().click();
+  await page.locator('[data-search-results-list] [data-person-report]').click();
   const report = await popupPromise;
   await report.waitForLoadState('load');
-  assert.equal(await report.title(), 'Relatório individual - Rose Maria da Silva');
-  assert.match(await report.locator('body').innerText(), /Relatório individual de participação e certificação/);
-  assert.match(await report.locator('body').innerText(), /Registros localizados: 2/);
+  assert.equal(await report.title(), 'Relatório de participação 2026 - Rose Maria da Silva');
+  assert.match(await report.locator('body').innerText(), /Relatório individual de participação — 2026/);
+  assert.match(await report.locator('body').innerText(), /Participações localizadas: 2/);
+  assert.match(await report.locator('body').innerText(), /Cargo de concurso: Professora/);
+  assert.equal(await report.locator('thead th').count(), 4);
   assert.equal(await report.locator('tbody tr').count(), 2);
-  assert.match(await report.locator('tbody').innerText(), /Certificado não localizado/);
+  assert.doesNotMatch(await report.locator('body').innerText(), /Certificado não localizado/);
   await report.close();
 
   for (const width of [1440, 768, 390]) {
@@ -185,6 +184,14 @@ setTimeout(() => {
     assert.equal(await page.getByText('Histórico de envios').count(), 0);
   }
 
+  await page.goto(pageUrl('ajuda.html'), { waitUntil: 'load' });
+  assert.equal(await page.getByRole('link', { name: 'Abrir atendimento 1Doc' }).count(), 1);
+  assert.match(await page.getByText('Solicitar conferência ou correção').locator('..').innerText(), /canal oficial da Prefeitura/);
+
+  await page.goto(pageUrl('entrar-em-contato.html'), { waitUntil: 'load' });
+  assert.equal(await page.getByRole('link', { name: 'Abrir atendimento 1Doc' }).count(), 1);
+  assert.match(await page.locator('body').innerText(), /Correção de certificado — Central de Certificados/);
+
   const appSource = fs.readFileSync(path.join(root, 'js', 'app.js'), 'utf8');
   for (const action of ['ENVIAR_CERTIFICADO', 'LISTAR_HISTORICO_ENVIOS', 'SOLICITAR_REPARO', 'LISTAR_SOLICITACOES_REPARO', 'ATUALIZAR_SOLICITACAO_REPARO', 'COMPLEMENTAR_SOLICITACAO_REPARO']) {
     assert.equal(appSource.includes(action), false, `Ação antiga ainda presente: ${action}`);
@@ -197,7 +204,7 @@ setTimeout(() => {
   assert.deepEqual(pageErrors, []);
 
   await browser.close();
-  process.stdout.write('Consulta, relatório individual, contato por e-mail e controles de segurança validados.\n');
+  process.stdout.write('Consulta, relatório anual por pessoa, orientação via 1Doc e controles de segurança validados.\n');
 })().catch(error => {
   process.stderr.write(`${error.stack || error}\n`);
   process.exitCode = 1;

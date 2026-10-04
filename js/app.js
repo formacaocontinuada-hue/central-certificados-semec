@@ -2245,7 +2245,7 @@
 
 
     article.className =
-      'school-record-row';
+      'school-certificate-row';
 
 
     article.dataset
@@ -2281,17 +2281,18 @@
 
 
     type.textContent =
-      certificado.cargo;
+      'Participação';
 
 
     const title =
       document.createElement(
-        'h3'
+        'h4'
       );
 
 
     title.textContent =
-      certificado.nome;
+      certificado
+        .formacaoNome;
 
 
     const details =
@@ -2302,14 +2303,6 @@
 
     details.className =
       'school-detail-list';
-
-
-    adicionarDetalhe(
-      details,
-      'Formação',
-      certificado
-        .formacaoNome
-    );
 
 
     adicionarDetalhe(
@@ -2407,56 +2400,6 @@
         .downloadUrl;
 
 
-    const reportButton =
-      document.createElement(
-        'button'
-      );
-
-
-    reportButton.className =
-      'server-button server-button--ghost';
-
-
-    reportButton.type =
-      'button';
-
-
-    reportButton.textContent =
-      'Gerar relatório';
-
-
-    reportButton.dataset
-      .certificateReport =
-        certificado.nome;
-
-
-    const correctionButton =
-      document.createElement(
-        'button'
-      );
-
-
-    correctionButton.className =
-      'server-button server-button--ghost';
-
-
-    correctionButton.type =
-      'button';
-
-
-    correctionButton.textContent =
-      'Pedir correção';
-
-
-    correctionButton.dataset
-      .certificateCorrection =
-        certificado.id;
-
-
-    correctionButton.disabled =
-      !certificado.id;
-
-
     if (
       !certificado
         .visualizacaoUrl ||
@@ -2489,9 +2432,7 @@
 
     actions.append(
       viewButton,
-      downloadButton,
-      reportButton,
-      correctionButton
+      downloadButton
     );
 
 
@@ -2500,6 +2441,163 @@
       title,
       details,
       actions
+    );
+
+
+    return article;
+  };
+
+
+  const criarGrupoPessoa = (
+    nome,
+    certificados
+  ) => {
+
+    const article =
+      document.createElement(
+        'article'
+      );
+
+
+    article.className =
+      'school-person-report-card';
+
+
+    const header =
+      document.createElement(
+        'div'
+      );
+
+
+    header.className =
+      'school-person-report-header';
+
+
+    const identity =
+      document.createElement(
+        'div'
+      );
+
+
+    identity.className =
+      'school-person-report-identity';
+
+
+    const cargo =
+      certificados
+        .map(
+          certificado =>
+            certificado.cargo
+        )
+        .find(
+          valor =>
+            valor &&
+            chaveCanonica(valor) !==
+              'servidor'
+        ) ||
+      certificados[0]
+        ?.cargo ||
+      'Servidor';
+
+
+    const type =
+      document.createElement(
+        'span'
+      );
+
+
+    type.className =
+      'school-type';
+
+
+    type.textContent =
+      cargo;
+
+
+    const title =
+      document.createElement(
+        'h3'
+      );
+
+
+    title.textContent =
+      nome;
+
+
+    const summary =
+      document.createElement(
+        'p'
+      );
+
+
+    summary.className =
+      'school-person-report-summary';
+
+
+    summary.textContent =
+      `${certificados.length} participaç${
+        certificados.length === 1
+          ? 'ão localizada'
+          : 'ões localizadas'
+      } em 2026`;
+
+
+    identity.append(
+      type,
+      title,
+      summary
+    );
+
+
+    const reportButton =
+      document.createElement(
+        'button'
+      );
+
+
+    reportButton.className =
+      'server-button server-button--ghost';
+
+
+    reportButton.type =
+      'button';
+
+
+    reportButton.textContent =
+      'Relatório anual 2026';
+
+
+    reportButton.dataset
+      .personReport =
+        nome;
+
+
+    header.append(
+      identity,
+      reportButton
+    );
+
+
+    const certificateList =
+      document.createElement(
+        'div'
+      );
+
+
+    certificateList.className =
+      'school-person-certificate-list';
+
+
+    certificateList.append(
+      ...certificados.map(
+        criarLinhaCertificado
+      )
+    );
+
+
+    article.append(
+      header,
+      certificateList
     );
 
 
@@ -2536,9 +2634,51 @@
     );
 
 
+    const grupos =
+      new Map();
+
+
+    certificados.forEach(
+      certificado => {
+
+        const chave =
+          chaveCanonica(
+            certificado.nome
+          );
+
+
+        if (!grupos.has(chave)) {
+          grupos.set(
+            chave,
+            {
+              nome:
+                certificado.nome,
+              certificados:
+                []
+            }
+          );
+        }
+
+
+        grupos
+          .get(chave)
+          .certificados
+          .push(
+            certificado
+          );
+      }
+    );
+
+
     container.replaceChildren(
-      ...certificados.map(
-        criarLinhaCertificado
+      ...Array.from(
+        grupos.values()
+      ).map(
+        grupo =>
+          criarGrupoPessoa(
+            grupo.nome,
+            grupo.certificados
+          )
       )
     );
   };
@@ -3595,15 +3735,15 @@
 
 
   /* =====================================================
-   * RELATÓRIO INDIVIDUAL E CONTATO POR E-MAIL
+   * RELATÓRIO INDIVIDUAL ANUAL POR PESSOA
    * ===================================================== */
 
 
-  const EMAIL_SEMEC =
-    'semec@tangaradaserra.mt.gov.br';
+  const ANO_RELATORIO_PARTICIPACAO =
+    '2026';
 
 
-  const certificadosDoServidor = (
+  const participacoesDoServidor = (
     nome
   ) => {
 
@@ -3622,7 +3762,9 @@
           ) ===
           chaveCanonica(
             nome
-          )
+          ) &&
+          certificado.ano ===
+            ANO_RELATORIO_PARTICIPACAO
       )
       .filter(
         certificado => {
@@ -3696,18 +3838,70 @@
     nome
   ) => {
 
-    const certificados =
-      certificadosDoServidor(
+    const participacoes =
+      participacoesDoServidor(
         nome
       );
 
 
     if (
-      certificados.length ===
+      participacoes.length ===
       0
     ) {
       return;
     }
+
+
+    const cargo =
+      participacoes
+        .map(
+          participacao =>
+            participacao.cargo
+        )
+        .find(
+          valor =>
+            valor &&
+            chaveCanonica(valor) !==
+              'servidor'
+        ) ||
+      participacoes[0]
+        .cargo ||
+      'Servidor';
+
+
+    const cargaHorariaTotal =
+      participacoes.reduce(
+        (
+          total,
+          participacao
+        ) => {
+
+          const numero =
+            String(
+              participacao
+                .cargaHoraria ||
+              ''
+            )
+              .replace(
+                ',',
+                '.'
+              )
+              .match(
+                /\d+(?:\.\d+)?/
+              );
+
+
+          return total +
+            (
+              numero
+                ? Number(
+                    numero[0]
+                  )
+                : 0
+            );
+        },
+        0
+      );
 
 
     const popup =
@@ -3750,7 +3944,7 @@
 
 
     doc.title =
-      `Relatório individual - ${nome}`;
+      `Relatório de participação 2026 - ${nome}`;
 
 
     const style =
@@ -3822,7 +4016,7 @@
     adicionarTextoRelatorio(
       heading,
       'h1',
-      'Relatório individual de participação e certificação'
+      'Relatório individual de participação — 2026'
     );
 
 
@@ -3847,7 +4041,30 @@
     adicionarTextoRelatorio(
       main,
       'p',
-      `Registros localizados: ${certificados.length}`
+      `Cargo de concurso: ${cargo}`
+    );
+
+
+    adicionarTextoRelatorio(
+      main,
+      'p',
+      `Ano de referência: ${ANO_RELATORIO_PARTICIPACAO}`
+    );
+
+
+    adicionarTextoRelatorio(
+      main,
+      'p',
+      `Participações localizadas: ${participacoes.length}`
+    );
+
+
+    adicionarTextoRelatorio(
+      main,
+      'p',
+      `Carga horária total localizada: ${new Intl.NumberFormat('pt-BR', {
+        maximumFractionDigits: 2
+      }).format(cargaHorariaTotal)} h`
     );
 
 
@@ -3865,7 +4082,7 @@
     adicionarTextoRelatorio(
       main,
       'h2',
-      'Participações e certificados'
+      'Participações em formações e eventos'
     );
 
 
@@ -3888,12 +4105,10 @@
 
 
     [
-      'Formação',
-      'Unidade',
+      'Formação ou evento',
+      'Unidade vinculada',
       'Carga horária',
-      'Ano',
-      'Situação',
-      'Certificação'
+      'Situação do registro'
     ].forEach(
       label =>
         adicionarTextoRelatorio(
@@ -3915,8 +4130,8 @@
       );
 
 
-    certificados.forEach(
-      certificado => {
+    participacoes.forEach(
+      participacao => {
 
         const row =
           doc.createElement(
@@ -3925,14 +4140,10 @@
 
 
         [
-          certificado.formacaoNome,
-          certificado.unidadeNome,
-          certificado.cargaHoraria,
-          certificado.ano,
-          certificado.situacao,
-          certificado.visualizacaoUrl || certificado.downloadUrl
-            ? 'Certificado disponível'
-            : 'Certificado não localizado'
+          participacao.formacaoNome,
+          participacao.unidadeNome,
+          participacao.cargaHoraria,
+          participacao.situacao
         ].forEach(
           value =>
             adicionarTextoRelatorio(
@@ -4005,7 +4216,7 @@
     adicionarTextoRelatorio(
       main,
       'p',
-      'Relatório gerado pela Central de Certificados do Portal SEMEC com base nos registros disponíveis no momento da consulta.',
+      'Relatório informativo gerado pela Central de Certificados do Portal SEMEC com base nas participações disponíveis no momento da consulta. Novos registros serão incorporados automaticamente à medida que forem incluídos na Central. Este relatório não substitui os certificados individuais.',
       'note'
     );
 
@@ -4016,120 +4227,6 @@
 
 
     popup.focus();
-  };
-
-
-  const abrirDialogoCorrecaoEmail = (
-    certificado
-  ) => {
-
-    openDialog({
-
-      kicker:
-        'Correção por e-mail',
-
-      title:
-        certificado.nome,
-
-      html:
-        '<form class="school-dialog-form" data-correction-email-form>' +
-          '<p data-correction-summary></p>' +
-          '<label><span>Descreva o que precisa ser conferido ou corrigido</span>' +
-          '<textarea name="descricao" required minlength="10" maxlength="1500" placeholder="Informe o problema de forma objetiva"></textarea></label>' +
-          '<p>Não informe senha, token ou CPF completo. O pedido será preparado no seu aplicativo de e-mail.</p>' +
-        '</form>',
-
-      actions:
-        '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button>' +
-        '<button class="server-button server-button--primary" type="button" data-prepare-correction-email>Preparar e-mail</button>'
-    });
-
-
-    const form =
-      dialogBody
-        ?.querySelector(
-          '[data-correction-email-form]'
-        );
-
-
-    const summary =
-      form
-        ?.querySelector(
-          '[data-correction-summary]'
-        );
-
-
-    if (
-      summary
-    ) {
-      summary.textContent =
-        `${certificado.formacaoNome} · ${certificado.unidadeNome} · ID ${certificado.id}`;
-    }
-
-
-    form
-      ?.querySelector(
-        '[name="descricao"]'
-      )
-      ?.focus();
-
-
-    dialogActions
-      ?.querySelector(
-        '[data-prepare-correction-email]'
-      )
-      ?.addEventListener(
-        'click',
-        () => {
-
-          if (
-            !form
-              ?.reportValidity()
-          ) {
-            return;
-          }
-
-
-          const descricao =
-            String(
-              new FormData(
-                form
-              ).get(
-                'descricao'
-              ) || ''
-            ).trim();
-
-
-          const assunto =
-            `Correção de certificado - ${certificado.nome}`;
-
-
-          const corpo =
-            [
-              'Olá, SEMEC.',
-              '',
-              'Solicito a conferência do certificado abaixo:',
-              `Servidor: ${certificado.nome}`,
-              `Formação: ${certificado.formacaoNome}`,
-              `Unidade: ${certificado.unidadeNome}`,
-              `Ano: ${certificado.ano}`,
-              `ID do certificado: ${certificado.id}`,
-              '',
-              `Descrição: ${descricao}`,
-              '',
-              'Por favor, confirmem o recebimento e orientem sobre a correção.'
-            ].join(
-              '\n'
-            );
-
-
-          closeDialog();
-
-
-          window.location.href =
-            `mailto:${EMAIL_SEMEC}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpo)}`;
-        }
-      );
   };
 
 
@@ -4667,7 +4764,7 @@
 
         const reportButton =
           event.target.closest(
-            '[data-certificate-report]'
+            '[data-person-report]'
           );
 
 
@@ -4679,46 +4776,13 @@
             String(
               reportButton
                 .dataset
-                .certificateReport ||
+                .personReport ||
               ''
             )
           );
 
 
           return;
-        }
-
-
-        const correctionButton =
-          event.target.closest(
-            '[data-certificate-correction]'
-          );
-
-
-        if (
-          correctionButton
-        ) {
-
-          const certificado =
-            certificadosPorId
-              .get(
-                String(
-                  correctionButton
-                    .dataset
-                    .certificateCorrection ||
-                  ''
-                )
-              );
-
-
-          if (
-            certificado
-          ) {
-
-            abrirDialogoCorrecaoEmail(
-              certificado
-            );
-          }
         }
       }
     );

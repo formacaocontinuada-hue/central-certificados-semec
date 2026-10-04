@@ -10,10 +10,10 @@ A Central existe para:
 - pesquisar qualquer servidor pelo nome;
 - consultar participações e certificados;
 - visualizar e baixar certificados existentes;
-- gerar relatório individual de participação e certificação, pronto para impressão ou salvamento em PDF;
-- encaminhar dúvidas e pedidos de correção por e-mail à SEMEC.
+- gerar relatório individual anual por pessoa, reunindo as participações disponíveis em 2026 e permitindo impressão ou salvamento em PDF;
+- orientar o registro de dúvidas e pedidos de correção pelo 1Doc, canal oficial da Prefeitura.
 
-Não fazem parte desta etapa: fluxo interno de solicitações, painel de análise, aprovação de reparos, pedido de complemento, acompanhamento de status, correção ou reemissão. O botão **Pedir correção** apenas prepara um e-mail identificado; nenhuma solicitação é gravada no backend do Portal.
+Não fazem parte desta etapa: fluxo interno de solicitações, painel de análise, aprovação de reparos, pedido de complemento, acompanhamento de status, correção ou reemissão. Não existe botão de correção vinculado ao certificado: a pessoa recebe as orientações e registra a solicitação diretamente na Central de Atendimento 1Doc.
 
 ## Identidade visual
 
@@ -55,4 +55,4 @@ O teste usa dados fictícios e uma ponte simulada; não acessa a base institucio
 node tests/integration.spec.js
 ```
 
-Ele verifica autenticação simulada, listagem, pesquisa por nome, relatório individual, modal de correção por e-mail, ausência das ações antigas, responsividade e validação da origem/janela dos serviços.
+Ele verifica autenticação simulada, listagem, pesquisa por nome, relatório anual por pessoa, orientação de correção via 1Doc, ausência das ações antigas, responsividade e validação da origem/janela dos serviços.
