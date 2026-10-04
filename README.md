@@ -10,7 +10,7 @@ A Central existe para:
 - pesquisar qualquer servidor pelo nome;
 - consultar participações e certificados;
 - visualizar e baixar certificados existentes;
-- gerar relatório individual anual por pessoa, reunindo as participações disponíveis em 2026 e permitindo impressão ou salvamento em PDF;
+- gerar relatório individual anual por pessoa, separando as participações disponíveis em 2026 nas três etapas institucionais e permitindo impressão ou salvamento em PDF;
 - orientar o registro de dúvidas e pedidos de correção pelo 1Doc, canal oficial da Prefeitura.
 
 Não fazem parte desta etapa: fluxo interno de solicitações, painel de análise, aprovação de reparos, pedido de complemento, acompanhamento de status, correção ou reemissão. Não existe botão de correção vinculado ao certificado: a pessoa recebe as orientações e registra a solicitação diretamente na Central de Atendimento 1Doc.
@@ -21,6 +21,7 @@ Os arquivos têm funções diferentes e não devem ser trocados:
 
 - `assents/sem_fundo/brasao_portal_semec.png`: identidade própria do Portal SEMEC, usada na navegação e no ícone das páginas;
 - `assents/sem_fundo/brasao_tangara.png`: brasão oficial da Prefeitura de Tangará da Serra, usado para representar a Prefeitura/SEMEC e como fallback institucional das unidades.
+- `assents/sem_fundo/assinatura_roselaine_mezz.png`: assinatura institucional exibida no relatório anual emitido pelo Portal SEMEC.
 
 Os brasões específicos das unidades continuam vinculados por ID estável em `js/escolas.js`. O parâmetro `?escola=` serve somente para pré-visualização; em produção, a unidade autenticada pelo backend prevalece.
 
@@ -46,6 +47,8 @@ Os nomes estáveis das formações são:
 - `FORMACAO_REDE` — Formação em Rede;
 - `FORMACAO_CENTRO_ENSINO` — Formação do Centro de Ensino;
 - `PALESTRAS_SEMINARIOS` — Palestras e Seminários.
+
+O relatório anual usa essas três etapas em blocos separados. Ele apresenta o campo genérico `Cargo`, não soma as cargas horárias de etapas distintas e identifica o Portal SEMEC como emissor do documento.
 
 ## Validação local
 
