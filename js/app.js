@@ -4454,7 +4454,7 @@
     adicionarTextoRelatorio(
       officialNote,
       'p',
-      'Documento oficial de consulta emitido pela Central de Certificados do Portal SEMEC, elaborado com base nos registros institucionais disponíveis na data de sua emissão. As informações apresentadas refletem os dados de eventos e formações, participação, presença e certificação mantidos pela Secretaria Municipal de Educação de Tangará da Serra — MT. Caso sejam identificadas divergências, omissões ou possíveis erros, a solicitação de análise e correção deverá ser formalizada exclusivamente pelo 1Doc, com identificação do servidor, do evento ou formação e descrição objetiva da inconsistência, para apreciação do setor responsável.'
+      'Documento oficial de consulta emitido pela Central de Certificados do Portal SEMEC, elaborado com base nos registros institucionais disponíveis na data de sua emissão. As informações apresentadas refletem os dados de eventos e formações, participação, presença e certificação mantidos pela Secretaria Municipal de Educação de Tangará da Serra — MT. Caso sejam identificadas divergências, omissões ou possíveis erros, a solicitação de análise e correção deverá ser formalizada pelo gestor autorizado exclusivamente no 1Doc interno, com identificação do servidor, do evento ou formação e descrição objetiva da inconsistência, para apreciação do setor responsável.'
     );
 
 

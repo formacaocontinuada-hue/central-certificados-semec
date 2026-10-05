@@ -11,9 +11,11 @@ A Central existe para:
 - consultar participações e certificados;
 - visualizar e baixar certificados existentes;
 - gerar relatório individual anual por pessoa, separando as participações disponíveis em 2026 nas três etapas institucionais e permitindo impressão ou salvamento em PDF;
-- orientar o registro de dúvidas e pedidos de correção pelo 1Doc, canal oficial da Prefeitura.
+- orientar os gestores autorizados sobre o registro de dúvidas e pedidos de correção pelo 1Doc interno da Prefeitura.
 
-Não fazem parte desta etapa: fluxo interno de solicitações, painel de análise, aprovação de reparos, pedido de complemento, acompanhamento de status, correção ou reemissão. Não existe botão de correção vinculado ao certificado: a pessoa recebe as orientações e registra a solicitação diretamente na Central de Atendimento 1Doc.
+Não fazem parte desta etapa: fluxo interno de solicitações, painel de análise, aprovação de reparos, pedido de complemento, acompanhamento de status, correção ou reemissão. Não existe botão de correção vinculado ao certificado: o gestor autorizado recebe as orientações e registra a solicitação diretamente no 1Doc interno.
+
+O acesso à área de certificados é restrito aos gestores autorizados. A conta do 1Doc interno é criada e fornecida previamente pela Prefeitura; não existe cadastro ou criação de acesso por esta página. O endereço institucional utilizado é `https://tangaradaserra.1doc.com.br/b.php?pg=o/login&redirecionar=cGc9cGFpbmVsL2xpc3Rhcg==&n=3`.
 
 ## Identidade visual
 

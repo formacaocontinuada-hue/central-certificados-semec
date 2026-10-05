@@ -234,11 +234,20 @@ let staticServer;
   }
 
   await page.goto(pageUrl('ajuda.html'), { waitUntil: 'load' });
-  assert.equal(await page.getByRole('link', { name: 'Abrir atendimento 1Doc' }).count(), 1);
-  assert.match(await page.getByText('Solicitar conferência ou correção').locator('..').innerText(), /canal oficial da Prefeitura/);
+  assert.equal(await page.getByRole('link', { name: 'Acessar o 1Doc interno' }).count(), 1);
+  assert.match(await page.getByText('Solicitar conferência ou correção').locator('..').innerText(), /conta que foi previamente criada e fornecida pela Prefeitura/);
+  assert.match(await page.locator('body').innerText(), /área de certificados é restrita aos gestores autorizados/i);
 
   await page.goto(pageUrl('entrar-em-contato.html'), { waitUntil: 'load' });
-  assert.equal(await page.getByRole('link', { name: 'Abrir atendimento 1Doc' }).count(), 1);
+  assert.equal(await page.getByRole('link', { name: 'Acessar o 1Doc interno' }).count(), 2);
+  assert.deepEqual(
+    await page.getByRole('link', { name: 'Acessar o 1Doc interno' }).evaluateAll(links => links.map(link => link.href)),
+    [
+      'https://tangaradaserra.1doc.com.br/b.php?pg=o/login&redirecionar=cGc9cGFpbmVsL2xpc3Rhcg==&n=3',
+      'https://tangaradaserra.1doc.com.br/b.php?pg=o/login&redirecionar=cGc9cGFpbmVsL2xpc3Rhcg==&n=3'
+    ]
+  );
+  assert.match(await page.locator('body').innerText(), /Não é possível criar uma conta por esta página/);
   assert.match(await page.locator('body').innerText(), /Correção de certificado — Central de Certificados/);
 
   const appSource = fs.readFileSync(path.join(root, 'js', 'app.js'), 'utf8');
