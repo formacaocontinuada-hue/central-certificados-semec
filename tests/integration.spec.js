@@ -174,7 +174,9 @@ let staticServer;
 
   await page.locator('[data-existing-results] [data-certificate-send]').first().click();
   await page.locator('[data-send-certificate-form] [name="emailDestino"]').fill('rose@exemplo.com');
+  assert.equal(await page.locator('[data-send-certificate-form] [name="salvarContato"]').isChecked(), false);
   await page.locator('[data-send-certificate-form] [name="confirmacao"]').check();
+  await page.locator('[data-send-certificate-form] [name="salvarContato"]').check();
   await page.locator('[data-submit-certificate-send]').click();
   await page.getByText('Certificado enviado ao servidor').waitFor({ state: 'visible' });
   assert.match(await page.locator('[data-send-result-message]').innerText(), /r\*\*\*@exemplo\.com/);
@@ -268,6 +270,8 @@ let staticServer;
     assert.equal(appSource.includes(action), false, `Ação antiga ainda presente: ${action}`);
   }
   assert.match(appSource, /ENVIAR_CERTIFICADO/);
+  assert.match(appSource, /name="salvarContato"/);
+  assert.match(appSource, /'salvarContato'[\s\S]*=== 'on'/);
   const backendSource = fs.readFileSync(path.join(root, 'js', 'backend.js'), 'utf8');
   assert.doesNotMatch(backendSource, /event\.source !== this\.iframe\.contentWindow/);
   assert.match(backendSource, /message\.nonce/);
