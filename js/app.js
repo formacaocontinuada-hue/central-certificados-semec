@@ -1939,6 +1939,19 @@
         ),
 
 
+      dataPeriodo:
+        String(
+          primeiroValor(
+            registro,
+            'dataPeriodo',
+            'periodo',
+            'dataEvento',
+            'dataFormacao',
+            'periodoFormacao'
+          ) || ''
+        ).trim(),
+
+
       cpfMascarado:
         String(
           primeiroValor(
@@ -1956,6 +1969,17 @@
             'percentual',
             'presenca',
             'frequencia'
+          ) || ''
+        ).trim(),
+
+
+      situacaoCertificacao:
+        String(
+          primeiroValor(
+            registro,
+            'situacaoCertificacao',
+            'statusCertificacao',
+            'certificacaoSituacao'
           ) || ''
         ).trim(),
 
@@ -2436,9 +2460,37 @@
     }
 
 
+    const oneDocButton =
+      document.createElement(
+        'button'
+      );
+
+
+    oneDocButton.className =
+      'server-button server-button--ghost';
+
+
+    oneDocButton.type =
+      'button';
+
+
+    oneDocButton.textContent =
+      'Solicitar análise via 1Doc';
+
+
+    oneDocButton.dataset
+      .certificateOnedoc =
+        certificado.id;
+
+
+    oneDocButton.disabled =
+      !certificado.id;
+
+
     actions.append(
       viewButton,
-      downloadButton
+      downloadButton,
+      oneDocButton
     );
 
 
@@ -5027,6 +5079,514 @@
 
 
   /* =====================================================
+   * SOLICITAÇÃO FORMAL VIA 1DOC
+   * ===================================================== */
+
+
+  const copiarTexto =
+    async (
+      texto
+    ) => {
+
+      const valor =
+        String(
+          texto || ''
+        );
+
+
+      if (
+        navigator.clipboard &&
+        window.isSecureContext
+      ) {
+
+        await navigator
+          .clipboard
+          .writeText(
+            valor
+          );
+
+        return;
+      }
+
+
+      const campo =
+        document.createElement(
+          'textarea'
+        );
+
+
+      campo.value =
+        valor;
+
+
+      campo.setAttribute(
+        'readonly',
+        ''
+      );
+
+
+      campo.style.position =
+        'fixed';
+
+
+      campo.style.opacity =
+        '0';
+
+
+      document.body
+        .appendChild(
+          campo
+        );
+
+
+      campo.select();
+
+
+      const copiado =
+        document.execCommand(
+          'copy'
+        );
+
+
+      campo.remove();
+
+
+      if (
+        !copiado
+      ) {
+
+        throw new Error(
+          'Não foi possível copiar o texto automaticamente.'
+        );
+      }
+    };
+
+
+  const abrirSolicitacao1Doc =
+    certificado => {
+
+      if (
+        !certificado
+      ) {
+        return;
+      }
+
+
+      openDialog({
+
+        kicker:
+          'Solicitação formal',
+
+        title:
+          'Preparar solicitação para o 1Doc',
+
+        html:
+          `
+            <p>Preencha somente o que precisa ser conferido. O Portal prepara o assunto e o texto do Memorando para copiar.</p>
+
+            <div class="central-onedoc-note">
+              <strong>O Portal não envia diretamente ao 1Doc.</strong>
+              <span>Depois de copiar, acesse <b>+ Novo → Memorando</b>, selecione <b>SEMEC-CGFCR — Coordenadoria Geral da Formação Continuada em Rede</b> e encaminhe <b>A/C Roselaine Mezz</b>.</span>
+            </div>
+
+            <dl class="server-floating-details" data-onedoc-details></dl>
+
+            <form class="central-onedoc-form" data-onedoc-form>
+              <label class="central-onedoc-field">
+                <span>Tipo de solicitação *</span>
+                <select data-onedoc-type required>
+                  <option value="Presença">Presença</option>
+                  <option value="Carga horária">Carga horária</option>
+                  <option value="Certificado não localizado">Certificado não localizado</option>
+                  <option value="Dados do certificado">Dados do certificado</option>
+                  <option value="Data ou período da formação">Data ou período da formação</option>
+                  <option value="Cargo/Função ou vínculo">Cargo/Função ou vínculo</option>
+                  <option value="Local de trabalho">Local de trabalho</option>
+                  <option value="Dados do servidor">Dados do servidor</option>
+                  <option value="Outro">Outro</option>
+                </select>
+              </label>
+
+              <label class="central-onedoc-field">
+                <span>Descreva a divergência ou o que precisa ser conferido *</span>
+                <textarea rows="4" data-onedoc-description required placeholder="Explique de forma objetiva o que você considera incorreto ou o que precisa ser verificado."></textarea>
+              </label>
+
+              <label class="central-onedoc-field">
+                <span>Informação complementar <small>(opcional)</small></span>
+                <textarea rows="2" data-onedoc-complement placeholder="Inclua somente informações que possam ajudar na conferência."></textarea>
+              </label>
+
+              <div class="central-onedoc-output">
+                <div class="central-onedoc-output__heading">
+                  <strong>Assunto para o Memorando</strong>
+                  <button class="server-button server-button--ghost" type="button" data-onedoc-copy-subject>Copiar assunto</button>
+                </div>
+                <input type="text" readonly data-onedoc-subject aria-label="Assunto para o Memorando">
+              </div>
+
+              <div class="central-onedoc-output">
+                <div class="central-onedoc-output__heading">
+                  <strong>Texto para o Memorando</strong>
+                  <button class="server-button server-button--ghost" type="button" data-onedoc-copy-body>Copiar texto</button>
+                </div>
+                <textarea rows="13" readonly data-onedoc-body aria-label="Texto para o Memorando"></textarea>
+              </div>
+
+              <p class="central-onedoc-copy-status" role="status" aria-live="polite" data-onedoc-copy-status></p>
+            </form>
+
+            <section class="central-onedoc-steps" aria-label="Como encaminhar no 1Doc">
+              <strong>Como encaminhar</strong>
+              <ol>
+                <li>Acesse o 1Doc e clique em <b>+ Novo</b>.</li>
+                <li>Escolha <b>Memorando</b>.</li>
+                <li>Em <b>Para</b>, selecione <b>SEMEC-CGFCR — Coordenadoria Geral da Formação Continuada em Rede</b>.</li>
+                <li>Direcione <b>A/C Roselaine Mezz</b>.</li>
+                <li>Cole o assunto e o texto preparados pelo Portal.</li>
+                <li>Anexe o relatório ou outro documento pertinente, quando necessário, e envie.</li>
+              </ol>
+            </section>
+          `,
+
+        actions:
+          '<button class="server-button server-button--primary" type="button" data-onedoc-copy-all>Copiar assunto e texto</button><button class="server-button server-button--ghost" type="button" data-modal-close>Fechar</button>'
+      });
+
+
+      const details =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-details]'
+          );
+
+
+      const typeField =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-type]'
+          );
+
+
+      const descriptionField =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-description]'
+          );
+
+
+      const complementField =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-complement]'
+          );
+
+
+      const subjectField =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-subject]'
+          );
+
+
+      const bodyField =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-body]'
+          );
+
+
+      const statusField =
+        dialogBody
+          ?.querySelector(
+            '[data-onedoc-copy-status]'
+          );
+
+
+      if (
+        !details ||
+        !typeField ||
+        !descriptionField ||
+        !complementField ||
+        !subjectField ||
+        !bodyField
+      ) {
+        return;
+      }
+
+
+      const presenca =
+        certificado.percentual ||
+        'Não informado';
+
+
+      const situacaoCertificacao =
+        certificado.situacaoCertificacao ||
+        (
+          certificado.visualizacaoUrl ||
+          certificado.downloadUrl
+            ? 'Certificado disponível na Central'
+            : 'Não informado'
+        );
+
+
+      [
+        [
+          'Servidor',
+          certificado.nome
+        ],
+        [
+          'CPF',
+          certificado.cpfMascarado ||
+          'Não informado'
+        ],
+        [
+          'Cargo/Função',
+          certificado.cargo ||
+          'Não informado'
+        ],
+        [
+          'Local de trabalho',
+          certificado.unidadeNome ||
+          'Não informado'
+        ],
+        [
+          'Evento/Formação',
+          certificado.formacaoNome ||
+          'Não informado'
+        ],
+        [
+          'Data/Período',
+          certificado.dataPeriodo ||
+          'Não informado'
+        ],
+        [
+          'Carga horária',
+          certificado.cargaHoraria ||
+          'Não informada'
+        ],
+        [
+          'Registro de presença',
+          presenca
+        ],
+        [
+          'Certificação',
+          situacaoCertificacao
+        ]
+      ].forEach(
+        item =>
+          adicionarDetalhe(
+            details,
+            item[0],
+            item[1]
+          )
+      );
+
+
+      const atualizarTexto =
+        () => {
+
+          const tipo =
+            typeField.value ||
+            'Outro';
+
+
+          const descricao =
+            descriptionField
+              .value
+              .trim();
+
+
+          const complemento =
+            complementField
+              .value
+              .trim();
+
+
+          const assunto =
+            `Portal SEMEC — Solicitação de análise de registro — ${certificado.nome}`;
+
+
+          const linhas = [
+            'À Coordenadoria Geral da Formação Continuada em Rede',
+            'A/C Roselaine Mezz',
+            '',
+            'Solicito análise das informações registradas no Portal SEMEC referentes ao servidor abaixo.',
+            '',
+            `Servidor: ${certificado.nome}`,
+            `CPF: ${certificado.cpfMascarado || 'Não informado'}`,
+            `Cargo/Função: ${certificado.cargo || 'Não informado'}`,
+            `Local de trabalho: ${certificado.unidadeNome || 'Não informado'}`,
+            '',
+            `Evento/Formação: ${certificado.formacaoNome || 'Não informado'}`,
+            `Data/Período: ${certificado.dataPeriodo || 'Não informado'}`,
+            `Carga horária: ${certificado.cargaHoraria || 'Não informada'}`,
+            `Registro de presença: ${presenca}`,
+            `Situação da certificação: ${situacaoCertificacao}`,
+            '',
+            `Tipo de solicitação: ${tipo}`,
+            '',
+            'Descrição da divergência:',
+            descricao || '[descreva o que precisa ser conferido]'
+          ];
+
+
+          if (
+            complemento
+          ) {
+
+            linhas.push(
+              '',
+              'Informação complementar:',
+              complemento
+            );
+          }
+
+
+          linhas.push(
+            '',
+            'Solicito a conferência dos registros institucionais e, caso seja constatada divergência, a adoção das providências cabíveis.',
+            '',
+            'Solicitação preparada a partir das informações disponíveis na Central de Certificados do Portal SEMEC.'
+          );
+
+
+          subjectField.value =
+            assunto;
+
+
+          bodyField.value =
+            linhas.join(
+              '\n'
+            );
+        };
+
+
+      const informarCopia =
+        mensagem => {
+
+          if (
+            statusField
+          ) {
+
+            statusField.textContent =
+              mensagem;
+
+
+            window.setTimeout(
+              () => {
+
+                if (
+                  statusField.textContent ===
+                  mensagem
+                ) {
+
+                  statusField.textContent =
+                    '';
+                }
+              },
+              2600
+            );
+          }
+        };
+
+
+      const executarCopia =
+        async (
+          texto
+        ) => {
+
+          try {
+
+            await copiarTexto(
+              texto
+            );
+
+
+            informarCopia(
+              'Texto copiado.'
+            );
+
+          } catch (
+            error
+          ) {
+
+            informarCopia(
+              error.message ||
+              'Não foi possível copiar automaticamente.'
+            );
+          }
+        };
+
+
+      [
+        typeField,
+        descriptionField,
+        complementField
+      ].forEach(
+        campo => {
+
+          campo.addEventListener(
+            'input',
+            atualizarTexto
+          );
+
+
+          campo.addEventListener(
+            'change',
+            atualizarTexto
+          );
+        }
+      );
+
+
+      dialogBody
+        .querySelector(
+          '[data-onedoc-copy-subject]'
+        )
+        ?.addEventListener(
+          'click',
+          () =>
+            executarCopia(
+              subjectField.value
+            )
+        );
+
+
+      dialogBody
+        .querySelector(
+          '[data-onedoc-copy-body]'
+        )
+        ?.addEventListener(
+          'click',
+          () =>
+            executarCopia(
+              bodyField.value
+            )
+        );
+
+
+      dialogActions
+        ?.querySelector(
+          '[data-onedoc-copy-all]'
+        )
+        ?.addEventListener(
+          'click',
+          () =>
+            executarCopia(
+              `Assunto: ${subjectField.value}\n\n${bodyField.value}`
+            )
+        );
+
+
+      atualizarTexto();
+
+
+      typeField.focus();
+    };
+
+
+  /* =====================================================
    * CLIQUES NAS AÇÕES DOS CERTIFICADOS
    * ===================================================== */
 
@@ -5115,6 +5675,42 @@
               certificado,
               'BAIXAR_PDF',
               downloadButton
+            );
+          }
+
+
+          return;
+        }
+
+
+        const oneDocButton =
+          event.target.closest(
+            '[data-certificate-onedoc]'
+          );
+
+
+        if (
+          oneDocButton
+        ) {
+
+          const certificado =
+            certificadosPorId
+              .get(
+                String(
+                  oneDocButton
+                    .dataset
+                    .certificateOnedoc ||
+                  ''
+                )
+              );
+
+
+          if (
+            certificado
+          ) {
+
+            abrirSolicitacao1Doc(
+              certificado
             );
           }
 
