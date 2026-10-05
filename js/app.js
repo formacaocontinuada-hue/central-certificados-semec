@@ -2460,37 +2460,9 @@
     }
 
 
-    const oneDocButton =
-      document.createElement(
-        'button'
-      );
-
-
-    oneDocButton.className =
-      'server-button server-button--ghost';
-
-
-    oneDocButton.type =
-      'button';
-
-
-    oneDocButton.textContent =
-      'Solicitar análise via 1Doc';
-
-
-    oneDocButton.dataset
-      .certificateOnedoc =
-        certificado.id;
-
-
-    oneDocButton.disabled =
-      !certificado.id;
-
-
     actions.append(
       viewButton,
-      downloadButton,
-      oneDocButton
+      downloadButton
     );
 
 
@@ -5163,35 +5135,60 @@
 
 
   const abrirSolicitacao1Doc =
-    certificado => {
-
-      if (
-        !certificado
-      ) {
-        return;
-      }
-
+    () => {
 
       openDialog({
 
         kicker:
-          'Solicitação formal',
+          'Ajuda e orientação',
 
         title:
           'Preparar solicitação para o 1Doc',
 
         html:
           `
-            <p>Preencha somente o que precisa ser conferido. O Portal prepara o assunto e o texto do Memorando para copiar.</p>
+            <p>Preencha os dados abaixo. O Portal preparará o assunto e o texto do Memorando para você copiar e encaminhar pelo 1Doc.</p>
 
             <div class="central-onedoc-note">
               <strong>O Portal não envia diretamente ao 1Doc.</strong>
               <span>Depois de copiar, acesse <b>+ Novo → Memorando</b>, selecione <b>SEMEC-CGFCR — Coordenadoria Geral da Formação Continuada em Rede</b> e encaminhe <b>A/C Roselaine Mezz</b>.</span>
             </div>
 
-            <dl class="server-floating-details" data-onedoc-details></dl>
-
             <form class="central-onedoc-form" data-onedoc-form>
+              <label class="central-onedoc-field">
+                <span>Nome completo do servidor *</span>
+                <input type="text" data-onedoc-server required autocomplete="off">
+              </label>
+
+              <div class="central-onedoc-grid">
+                <label class="central-onedoc-field">
+                  <span>Cargo/Função</span>
+                  <input type="text" data-onedoc-role autocomplete="off">
+                </label>
+
+                <label class="central-onedoc-field">
+                  <span>Local de trabalho</span>
+                  <input type="text" data-onedoc-workplace autocomplete="off">
+                </label>
+              </div>
+
+              <label class="central-onedoc-field">
+                <span>Evento/Formação</span>
+                <input type="text" data-onedoc-event autocomplete="off">
+              </label>
+
+              <div class="central-onedoc-grid">
+                <label class="central-onedoc-field">
+                  <span>Data ou período</span>
+                  <input type="text" data-onedoc-period autocomplete="off" placeholder="Ex.: 15/09/2026 ou agosto a setembro/2026">
+                </label>
+
+                <label class="central-onedoc-field">
+                  <span>Carga horária</span>
+                  <input type="text" data-onedoc-hours autocomplete="off" placeholder="Ex.: 10h">
+                </label>
+              </div>
+
               <label class="central-onedoc-field">
                 <span>Tipo de solicitação *</span>
                 <select data-onedoc-type required>
@@ -5244,7 +5241,8 @@
                 <li>Em <b>Para</b>, selecione <b>SEMEC-CGFCR — Coordenadoria Geral da Formação Continuada em Rede</b>.</li>
                 <li>Direcione <b>A/C Roselaine Mezz</b>.</li>
                 <li>Cole o assunto e o texto preparados pelo Portal.</li>
-                <li>Anexe o relatório ou outro documento pertinente, quando necessário, e envie.</li>
+                <li>Anexe relatório, certificado ou outro documento pertinente, quando necessário.</li>
+                <li>Envie o Memorando.</li>
               </ol>
             </section>
           `,
@@ -5254,60 +5252,71 @@
       });
 
 
-      const details =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-details]'
-          );
+      const serverField =
+        dialogBody?.querySelector(
+          '[data-onedoc-server]'
+        );
 
+      const roleField =
+        dialogBody?.querySelector(
+          '[data-onedoc-role]'
+        );
+
+      const workplaceField =
+        dialogBody?.querySelector(
+          '[data-onedoc-workplace]'
+        );
+
+      const eventField =
+        dialogBody?.querySelector(
+          '[data-onedoc-event]'
+        );
+
+      const periodField =
+        dialogBody?.querySelector(
+          '[data-onedoc-period]'
+        );
+
+      const hoursField =
+        dialogBody?.querySelector(
+          '[data-onedoc-hours]'
+        );
 
       const typeField =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-type]'
-          );
-
+        dialogBody?.querySelector(
+          '[data-onedoc-type]'
+        );
 
       const descriptionField =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-description]'
-          );
-
+        dialogBody?.querySelector(
+          '[data-onedoc-description]'
+        );
 
       const complementField =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-complement]'
-          );
-
+        dialogBody?.querySelector(
+          '[data-onedoc-complement]'
+        );
 
       const subjectField =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-subject]'
-          );
-
+        dialogBody?.querySelector(
+          '[data-onedoc-subject]'
+        );
 
       const bodyField =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-body]'
-          );
-
+        dialogBody?.querySelector(
+          '[data-onedoc-body]'
+        );
 
       const statusField =
-        dialogBody
-          ?.querySelector(
-            '[data-onedoc-copy-status]'
-          );
+        dialogBody?.querySelector(
+          '[data-onedoc-copy-status]'
+        );
 
 
       if (
-        !details ||
+        !serverField ||
         !typeField ||
         !descriptionField ||
-        !complementField ||
         !subjectField ||
         !bodyField
       ) {
@@ -5315,96 +5324,96 @@
       }
 
 
-      const presenca =
-        certificado.percentual ||
-        'Não informado';
-
-
-      const situacaoCertificacao =
-        certificado.situacaoCertificacao ||
+      const linhaSePreenchida =
         (
-          certificado.visualizacaoUrl ||
-          certificado.downloadUrl
-            ? 'Certificado disponível na Central'
-            : 'Não informado'
-        );
+          rotulo,
+          valor
+        ) => {
 
+          const texto =
+            String(
+              valor || ''
+            ).trim();
 
-      [
-        [
-          'Servidor',
-          certificado.nome
-        ],
-        [
-          'CPF',
-          certificado.cpfMascarado ||
-          'Não informado'
-        ],
-        [
-          'Cargo/Função',
-          certificado.cargo ||
-          'Não informado'
-        ],
-        [
-          'Local de trabalho',
-          certificado.unidadeNome ||
-          'Não informado'
-        ],
-        [
-          'Evento/Formação',
-          certificado.formacaoNome ||
-          'Não informado'
-        ],
-        [
-          'Data/Período',
-          certificado.dataPeriodo ||
-          'Não informado'
-        ],
-        [
-          'Carga horária',
-          certificado.cargaHoraria ||
-          'Não informada'
-        ],
-        [
-          'Registro de presença',
-          presenca
-        ],
-        [
-          'Certificação',
-          situacaoCertificacao
-        ]
-      ].forEach(
-        item =>
-          adicionarDetalhe(
-            details,
-            item[0],
-            item[1]
-          )
-      );
+          return texto
+            ? `${rotulo}: ${texto}`
+            : '';
+        };
 
 
       const atualizarTexto =
         () => {
 
+          const nome =
+            serverField.value.trim();
+
+          const cargo =
+            roleField?.value.trim() || '';
+
+          const local =
+            workplaceField?.value.trim() || '';
+
+          const evento =
+            eventField?.value.trim() || '';
+
+          const periodo =
+            periodField?.value.trim() || '';
+
+          const carga =
+            hoursField?.value.trim() || '';
+
           const tipo =
             typeField.value ||
             'Outro';
 
-
           const descricao =
-            descriptionField
-              .value
-              .trim();
-
+            descriptionField.value.trim();
 
           const complemento =
-            complementField
-              .value
-              .trim();
+            complementField?.value.trim() || '';
+
+          const identificacao =
+            nome ||
+            '[nome do servidor]';
+
+          subjectField.value =
+            `Portal SEMEC — Solicitação de análise de registro — ${identificacao}`;
 
 
-          const assunto =
-            `Portal SEMEC — Solicitação de análise de registro — ${certificado.nome}`;
+          const dadosServidor = [
+            linhaSePreenchida(
+              'Servidor',
+              nome
+            ),
+            linhaSePreenchida(
+              'Cargo/Função',
+              cargo
+            ),
+            linhaSePreenchida(
+              'Local de trabalho',
+              local
+            )
+          ].filter(
+            Boolean
+          );
+
+
+          const dadosFormacao = [
+            linhaSePreenchida(
+              'Evento/Formação',
+              evento
+            ),
+            linhaSePreenchida(
+              'Data/Período',
+              periodo
+            ),
+            linhaSePreenchida(
+              'Carga horária',
+              carga
+            )
+          ].filter(
+            Boolean
+          );
 
 
           const linhas = [
@@ -5413,28 +5422,33 @@
             '',
             'Solicito análise das informações registradas no Portal SEMEC referentes ao servidor abaixo.',
             '',
-            `Servidor: ${certificado.nome}`,
-            `CPF: ${certificado.cpfMascarado || 'Não informado'}`,
-            `Cargo/Função: ${certificado.cargo || 'Não informado'}`,
-            `Local de trabalho: ${certificado.unidadeNome || 'Não informado'}`,
-            '',
-            `Evento/Formação: ${certificado.formacaoNome || 'Não informado'}`,
-            `Data/Período: ${certificado.dataPeriodo || 'Não informado'}`,
-            `Carga horária: ${certificado.cargaHoraria || 'Não informada'}`,
-            `Registro de presença: ${presenca}`,
-            `Situação da certificação: ${situacaoCertificacao}`,
+            ...dadosServidor
+          ];
+
+
+          if (
+            dadosFormacao.length
+          ) {
+            linhas.push(
+              '',
+              ...dadosFormacao
+            );
+          }
+
+
+          linhas.push(
             '',
             `Tipo de solicitação: ${tipo}`,
             '',
             'Descrição da divergência:',
-            descricao || '[descreva o que precisa ser conferido]'
-          ];
+            descricao ||
+              '[descreva o que precisa ser conferido]'
+          );
 
 
           if (
             complemento
           ) {
-
             linhas.push(
               '',
               'Informação complementar:',
@@ -5447,12 +5461,8 @@
             '',
             'Solicito a conferência dos registros institucionais e, caso seja constatada divergência, a adoção das providências cabíveis.',
             '',
-            'Solicitação preparada a partir das informações disponíveis na Central de Certificados do Portal SEMEC.'
+            'Solicitação preparada com auxílio da Central de Certificados do Portal SEMEC.'
           );
-
-
-          subjectField.value =
-            assunto;
 
 
           bodyField.value =
@@ -5472,7 +5482,6 @@
             statusField.textContent =
               mensagem;
 
-
             window.setTimeout(
               () => {
 
@@ -5480,7 +5489,6 @@
                   statusField.textContent ===
                   mensagem
                 ) {
-
                   statusField.textContent =
                     '';
                 }
@@ -5492,16 +5500,32 @@
 
 
       const executarCopia =
-        async (
-          texto
-        ) => {
+        async texto => {
+
+          if (
+            !serverField.value.trim() ||
+            !descriptionField.value.trim()
+          ) {
+
+            informarCopia(
+              'Preencha o nome do servidor e a descrição da solicitação antes de copiar.'
+            );
+
+            (
+              !serverField.value.trim()
+                ? serverField
+                : descriptionField
+            ).focus();
+
+            return;
+          }
+
 
           try {
 
             await copiarTexto(
               texto
             );
-
 
             informarCopia(
               'Texto copiado.'
@@ -5520,24 +5544,33 @@
 
 
       [
+        serverField,
+        roleField,
+        workplaceField,
+        eventField,
+        periodField,
+        hoursField,
         typeField,
         descriptionField,
         complementField
-      ].forEach(
-        campo => {
+      ]
+        .filter(
+          Boolean
+        )
+        .forEach(
+          campo => {
 
-          campo.addEventListener(
-            'input',
-            atualizarTexto
-          );
+            campo.addEventListener(
+              'input',
+              atualizarTexto
+            );
 
-
-          campo.addEventListener(
-            'change',
-            atualizarTexto
-          );
-        }
-      );
+            campo.addEventListener(
+              'change',
+              atualizarTexto
+            );
+          }
+        );
 
 
       dialogBody
@@ -5581,9 +5614,18 @@
 
       atualizarTexto();
 
-
-      typeField.focus();
+      serverField.focus();
     };
+
+
+  document
+    .querySelector(
+      '[data-open-onedoc-request]'
+    )
+    ?.addEventListener(
+      'click',
+      abrirSolicitacao1Doc
+    );
 
 
   /* =====================================================
@@ -5675,42 +5717,6 @@
               certificado,
               'BAIXAR_PDF',
               downloadButton
-            );
-          }
-
-
-          return;
-        }
-
-
-        const oneDocButton =
-          event.target.closest(
-            '[data-certificate-onedoc]'
-          );
-
-
-        if (
-          oneDocButton
-        ) {
-
-          const certificado =
-            certificadosPorId
-              .get(
-                String(
-                  oneDocButton
-                    .dataset
-                    .certificateOnedoc ||
-                  ''
-                )
-              );
-
-
-          if (
-            certificado
-          ) {
-
-            abrirSolicitacao1Doc(
-              certificado
             );
           }
 
