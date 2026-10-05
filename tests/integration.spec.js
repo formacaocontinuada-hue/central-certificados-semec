@@ -21,10 +21,12 @@ channel.port1.onmessage = ({ data }) => {
   } else if (data.acao === 'BUSCAR_CERTIFICADOS') {
     resultado = { ok: true, unidade, certificados: [
       { 'ID_CERTIFICADO': 'CERT-1', 'NOME_SERVIDOR': 'Rose Maria da Silva', 'FORMAÇÃO': 'Formação em Rede', 'UNIDADE_VINCULADA': 'CME Atacílio de Souza', 'CARGA_HORÁRIA': '20', 'ANO_REFERÊNCIA': '2026', 'SITUAÇÃO': 'ATIVO', 'LINK_PDF': 'https://example.test/cert-1.pdf' },
-      { 'ID_CERTIFICADO': 'CERT-3', 'NOME_SERVIDOR': 'Rose Maria da Silva', 'FORMAÇÃO': 'Palestras e Seminários', 'UNIDADE_VINCULADA': 'CME Atacílio de Souza', 'CARGA_HORÁRIA': '8', 'ANO_REFERÊNCIA': '2026', 'SITUAÇÃO': 'ATIVO', 'LINK_PDF': '' }
+      { 'ID_CERTIFICADO': 'CERT-3', 'NOME_SERVIDOR': 'Rose Maria da Silva', 'FORMAÇÃO': 'Palestras e Seminários', 'NOME_EVENTO': 'Palestra Educação Inclusiva na Rede Municipal', 'UNIDADE_VINCULADA': 'CME Atacílio de Souza', 'CARGA_HORÁRIA': '8', 'ANO_REFERÊNCIA': '2026', 'SITUAÇÃO': 'ATIVO', 'LINK_PDF': '' }
     ] };
   } else if (data.acao === 'REGISTRAR_ACESSO_CERTIFICADO') {
     resultado = { ok: true, url: 'https://example.test/cert-1.pdf' };
+  } else if (data.acao === 'ENVIAR_CERTIFICADO') {
+    resultado = { ok: true, idEnvio: 'ENV-1', emailDestinoMascarado: 'r***@exemplo.com' };
   } else {
     resultado = { ok: false, codigo: 'ACAO_INVALIDA', mensagem: 'Ação fora do escopo atual.' };
   }
@@ -152,7 +154,10 @@ let staticServer;
   assert.deepEqual(await page.locator('[data-existing-results] .school-person-report-header .school-type').allTextContents(), ['Professora', 'Técnico Administrativo']);
   assert.equal(await page.locator('[data-person-report]').count(), 2);
   assert.equal(await page.locator('[data-certificate-correction]').count(), 0);
-  assert.equal(await page.locator('[data-certificate-send], [data-certificate-repair]').count(), 0);
+  assert.equal(await page.locator('[data-existing-results] [data-certificate-send]').count(), 2);
+  assert.equal(await page.locator('[data-existing-results] [data-certificate-send]').first().isEnabled(), true);
+  assert.equal(await page.locator('[data-existing-results] [data-certificate-send]').nth(1).isDisabled(), true);
+  assert.equal(await page.locator('[data-certificate-repair]').count(), 0);
   assert.equal(await page.getByText('Solicitações de reparo').count(), 0);
   assert.equal(await page.getByText('Histórico de envios').count(), 0);
 
@@ -166,6 +171,14 @@ let staticServer;
   const downloadButton = page.locator('[data-existing-results] [data-certificate-download]').first();
   await downloadButton.click();
   await downloadButton.getByText('Download solicitado ✓').waitFor({ state: 'visible' });
+
+  await page.locator('[data-existing-results] [data-certificate-send]').first().click();
+  await page.locator('[data-send-certificate-form] [name="emailDestino"]').fill('rose@exemplo.com');
+  await page.locator('[data-send-certificate-form] [name="confirmacao"]').check();
+  await page.locator('[data-submit-certificate-send]').click();
+  await page.getByText('Certificado enviado ao servidor').waitFor({ state: 'visible' });
+  assert.match(await page.locator('[data-send-result-message]').innerText(), /r\*\*\*@exemplo\.com/);
+  await page.getByRole('button', { name: 'Concluir' }).click();
 
   await page.locator('[name="busca"]').fill('ro');
   await page.getByRole('button', { name: 'Pesquisar' }).click();
@@ -251,9 +264,10 @@ let staticServer;
   assert.match(await page.locator('body').innerText(), /Correção de certificado — Central de Certificados/);
 
   const appSource = fs.readFileSync(path.join(root, 'js', 'app.js'), 'utf8');
-  for (const action of ['ENVIAR_CERTIFICADO', 'LISTAR_HISTORICO_ENVIOS', 'SOLICITAR_REPARO', 'LISTAR_SOLICITACOES_REPARO', 'ATUALIZAR_SOLICITACAO_REPARO', 'COMPLEMENTAR_SOLICITACAO_REPARO']) {
+  for (const action of ['LISTAR_HISTORICO_ENVIOS', 'SOLICITAR_REPARO', 'LISTAR_SOLICITACOES_REPARO', 'ATUALIZAR_SOLICITACAO_REPARO', 'COMPLEMENTAR_SOLICITACAO_REPARO']) {
     assert.equal(appSource.includes(action), false, `Ação antiga ainda presente: ${action}`);
   }
+  assert.match(appSource, /ENVIAR_CERTIFICADO/);
   const backendSource = fs.readFileSync(path.join(root, 'js', 'backend.js'), 'utf8');
   assert.doesNotMatch(backendSource, /event\.source !== this\.iframe\.contentWindow/);
   assert.match(backendSource, /message\.nonce/);
