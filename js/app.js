@@ -5189,6 +5189,9 @@
             '<label class="school-check-line">' +
               '<input type="checkbox" name="confirmacao" required> Conferi o endereço e confirmo que ele pertence ao servidor correto.' +
             '</label>' +
+            '<label class="school-check-line">' +
+              '<input type="checkbox" name="salvarContato"> Salvar este e-mail para próximos envios.' +
+            '</label>' +
             '<p class="central-action-message" role="alert" data-action-error hidden></p>' +
           '</form>',
 
@@ -5294,7 +5297,9 @@
                       ) === 'on',
 
                     salvarContato:
-                      false
+                      data.get(
+                        'salvarContato'
+                      ) === 'on'
                   }
                 )
               );
