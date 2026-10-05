@@ -21,7 +21,7 @@ channel.port1.onmessage = ({ data }) => {
   } else if (data.acao === 'BUSCAR_CERTIFICADOS') {
     resultado = { ok: true, unidade, certificados: [
       { 'ID_CERTIFICADO': 'CERT-1', 'NOME_SERVIDOR': 'Rose Maria da Silva', 'FORMAÇÃO': 'Formação em Rede', 'UNIDADE_VINCULADA': 'CME Atacílio de Souza', 'CARGA_HORÁRIA': '20', 'ANO_REFERÊNCIA': '2026', 'SITUAÇÃO': 'ATIVO', 'LINK_PDF': 'https://example.test/cert-1.pdf' },
-      { 'ID_CERTIFICADO': 'CERT-3', 'NOME_SERVIDOR': 'Rose Maria da Silva', 'FORMAÇÃO': 'Palestras e Seminários', 'NOME_EVENTO': 'Palestra Educação Inclusiva na Rede Municipal', 'UNIDADE_VINCULADA': 'CME Atacílio de Souza', 'CARGA_HORÁRIA': '8', 'ANO_REFERÊNCIA': '2026', 'SITUAÇÃO': 'ATIVO', 'LINK_PDF': '' }
+      { 'ID_CERTIFICADO': 'CERT-3', 'NOME_SERVIDOR': 'Rose Maria da Silva', 'FORMAÇÃO': 'Palestras e Seminários', eventoNome: 'Capacitação Lei Lucas', eventoTitulo: '1º Encontro de Formação em Rede - Capacitação Lei Lucas', dataEvento: '20/04/2026', 'UNIDADE_VINCULADA': 'CME Atacílio de Souza', 'CARGA_HORÁRIA': '8', 'ANO_REFERÊNCIA': '2026', 'SITUAÇÃO': 'ATIVO', 'LINK_PDF': '' }
     ] };
   } else if (data.acao === 'REGISTRAR_ACESSO_CERTIFICADO') {
     resultado = { ok: true, url: 'https://example.test/cert-1.pdf' };
