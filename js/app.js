@@ -1718,6 +1718,57 @@
       );
 
 
+    const evento =
+      primeiroValor(
+        registro,
+        'evento'
+      );
+
+
+    const eventoNome =
+      String(
+
+        (
+          evento &&
+          typeof evento ===
+            'object'
+            ? primeiroValor(
+                evento,
+                'nome',
+                'titulo',
+                'nomeEvento',
+                'tituloEvento',
+                'nomePalestra',
+                'tituloPalestra'
+              )
+            : (
+                typeof evento ===
+                  'string'
+                  ? evento
+                  : ''
+              )
+        ) ||
+
+        primeiroValor(
+          registro,
+          'eventoNome',
+          'nomeEvento',
+          'tituloEvento',
+          'nomeDoEvento',
+          'tituloDoEvento',
+          'nomePalestra',
+          'tituloPalestra',
+          'nomeDaPalestra',
+          'tituloDaPalestra',
+          'atividadeNome',
+          'nomeAtividade'
+        ) ||
+
+        ''
+
+      ).trim();
+
+
     const formacaoNormalizada =
       nomeFormacao(
         formacao,
@@ -1883,6 +1934,10 @@
       formacaoNome:
         formacaoNormalizada
           .nome,
+
+
+      eventoNome:
+        eventoNome,
 
 
       unidadeNome:
@@ -2460,9 +2515,49 @@
     }
 
 
+    const sendButton =
+      document.createElement(
+        'button'
+      );
+
+
+    sendButton.className =
+      'server-button server-button--ghost';
+
+
+    sendButton.type =
+      'button';
+
+
+    sendButton.textContent =
+      'Enviar ao servidor';
+
+
+    sendButton.dataset
+      .certificateSend =
+        certificado.id;
+
+
+    sendButton.disabled =
+      !certificado.id ||
+      certificado.situacaoId !==
+        'ativo';
+
+
+    if (
+      certificado.situacaoId !==
+      'ativo'
+    ) {
+
+      sendButton.title =
+        'O envio por e-mail está disponível somente para certificados ativos.';
+    }
+
+
     actions.append(
       viewButton,
-      downloadButton
+      downloadButton,
+      sendButton
     );
 
 
@@ -4378,8 +4473,18 @@
               );
 
 
+            const nomeEventoRelatorio =
+              participacao.eventoNome ||
+              (
+                participacao.formacaoId ===
+                  'PALESTRAS_SEMINARIOS'
+                  ? 'Nome da palestra ou evento não informado'
+                  : participacao.formacaoNome
+              );
+
+
             [
-              participacao.formacaoNome,
+              nomeEventoRelatorio,
               participacao.unidadeNome,
               participacao.cargaHoraria,
               participacao.situacao
@@ -5051,6 +5156,222 @@
 
 
   /* =====================================================
+   * ENVIO DO CERTIFICADO POR E-MAIL
+   * ===================================================== */
+
+
+  const abrirDialogoEnvio =
+    certificado => {
+
+      if (
+        !certificado?.id ||
+        !backend
+      ) {
+        return;
+      }
+
+
+      openDialog({
+
+        kicker:
+          'Enviar certificado',
+
+        title:
+          certificado.nome,
+
+        html:
+          '<form class="school-dialog-form" data-send-certificate-form>' +
+            '<p>Informe o e-mail do servidor e confirme o destinatário antes do envio.</p>' +
+            '<label>' +
+              '<span>E-mail do servidor</span>' +
+              '<input type="email" name="emailDestino" autocomplete="email" placeholder="nome@exemplo.com" required maxlength="254">' +
+            '</label>' +
+            '<label class="school-check-line">' +
+              '<input type="checkbox" name="confirmacao" required> Conferi o endereço e confirmo que ele pertence ao servidor correto.' +
+            '</label>' +
+            '<p class="central-action-message" role="alert" data-action-error hidden></p>' +
+          '</form>',
+
+        actions:
+          '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button>' +
+          '<button class="server-button server-button--primary" type="button" data-submit-certificate-send>Confirmar envio</button>'
+      });
+
+
+      const form =
+        dialogBody?.querySelector(
+          '[data-send-certificate-form]'
+        );
+
+
+      const submit =
+        dialogActions?.querySelector(
+          '[data-submit-certificate-send]'
+        );
+
+
+      const email =
+        form?.querySelector(
+          '[name="emailDestino"]'
+        );
+
+
+      email?.focus();
+
+
+      submit?.addEventListener(
+        'click',
+        async () => {
+
+          if (
+            !form?.reportValidity()
+          ) {
+            return;
+          }
+
+
+          const errorBox =
+            form.querySelector(
+              '[data-action-error]'
+            );
+
+
+          if (
+            errorBox
+          ) {
+            errorBox.hidden =
+              true;
+          }
+
+
+          const data =
+            new FormData(
+              form
+            );
+
+
+          form
+            .querySelectorAll(
+              'input, button'
+            )
+            .forEach(
+              control => {
+                control.disabled =
+                  true;
+              }
+            );
+
+
+          submit.disabled =
+            true;
+
+
+          submit.textContent =
+            'Enviando...';
+
+
+          try {
+
+            const result =
+              extrairResultado(
+
+                await backend.request(
+                  'ENVIAR_CERTIFICADO',
+                  {
+                    idCertificado:
+                      certificado.id,
+
+                    emailDestino:
+                      String(
+                        data.get(
+                          'emailDestino'
+                        ) || ''
+                      ).trim(),
+
+                    confirmado:
+                      data.get(
+                        'confirmacao'
+                      ) === 'on',
+
+                    salvarContato:
+                      false
+                  }
+                )
+              );
+
+
+            openDialog({
+
+              kicker:
+                'Envio concluído',
+
+              title:
+                'Certificado enviado ao servidor',
+
+              html:
+                '<p data-send-result-message></p>',
+
+              actions:
+                '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'
+            });
+
+
+            const resultMessage =
+              dialogBody?.querySelector(
+                '[data-send-result-message]'
+              );
+
+
+            if (
+              resultMessage
+            ) {
+
+              resultMessage.textContent =
+                `Envio confirmado para ${result.emailDestinoMascarado || 'o e-mail informado'}.`;
+            }
+
+          } catch (
+            error
+          ) {
+
+            if (
+              errorBox
+            ) {
+
+              errorBox.textContent =
+                error.message ||
+                'Não foi possível enviar o certificado.';
+
+              errorBox.hidden =
+                false;
+            }
+
+
+            form
+              .querySelectorAll(
+                'input, button'
+              )
+              .forEach(
+                control => {
+                  control.disabled =
+                    false;
+                }
+              );
+
+
+            submit.disabled =
+              false;
+
+
+            submit.textContent =
+              'Confirmar envio';
+          }
+        }
+      );
+    };
+
+
+  /* =====================================================
    * SOLICITAÇÃO FORMAL VIA 1DOC
    * ===================================================== */
 
@@ -5717,6 +6038,40 @@
               certificado,
               'BAIXAR_PDF',
               downloadButton
+            );
+          }
+
+
+          return;
+        }
+
+
+        const sendButton =
+          event.target.closest(
+            '[data-certificate-send]'
+          );
+
+
+        if (
+          sendButton
+        ) {
+
+          const certificado =
+            certificadosPorId.get(
+              String(
+                sendButton.dataset
+                  .certificateSend ||
+                ''
+              )
+            );
+
+
+          if (
+            certificado
+          ) {
+
+            abrirDialogoEnvio(
+              certificado
             );
           }
 
