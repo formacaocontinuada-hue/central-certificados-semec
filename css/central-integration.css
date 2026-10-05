@@ -176,3 +176,122 @@ body.school-area-page .school-unit-card__logo img {
     animation: none;
   }
 }
+
+/* Solicitação formal: preparação manual de Memorando para o 1Doc. */
+.central-onedoc-note,
+.central-onedoc-steps {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid #c7daee;
+  border-radius: 8px;
+  background: #f5f9fe;
+  color: #294f78;
+}
+
+.central-onedoc-note strong,
+.central-onedoc-steps strong {
+  color: #062a5a;
+}
+
+.central-onedoc-note span {
+  line-height: 1.5;
+}
+
+.central-onedoc-form {
+  display: grid;
+  gap: 14px;
+}
+
+.central-onedoc-field {
+  display: grid;
+  gap: 7px;
+  color: #092e5e;
+  font-weight: 800;
+}
+
+.central-onedoc-field > span {
+  font-size: 0.84rem;
+}
+
+.central-onedoc-field small {
+  color: #607793;
+  font-weight: 700;
+}
+
+.central-onedoc-field select,
+.central-onedoc-field textarea,
+.central-onedoc-output input,
+.central-onedoc-output textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #afc4da;
+  border-radius: 7px;
+  background: #fff;
+  color: #163b64;
+  font: inherit;
+}
+
+.central-onedoc-field select:focus,
+.central-onedoc-field textarea:focus,
+.central-onedoc-output input:focus,
+.central-onedoc-output textarea:focus {
+  border-color: #1767ad;
+  outline: 3px solid rgba(23, 103, 173, 0.14);
+}
+
+.central-onedoc-field textarea,
+.central-onedoc-output textarea {
+  resize: vertical;
+}
+
+.central-onedoc-output {
+  display: grid;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.central-onedoc-output__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.central-onedoc-output__heading strong {
+  color: #062a5a;
+}
+
+.central-onedoc-output input[readonly],
+.central-onedoc-output textarea[readonly] {
+  background: #f8fbff;
+}
+
+.central-onedoc-copy-status {
+  min-height: 1.25rem;
+  color: #17613f !important;
+  font-weight: 800;
+}
+
+.central-onedoc-steps ol {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  color: #3f5f80;
+}
+
+.central-onedoc-steps li + li {
+  margin-top: 5px;
+}
+
+@media (max-width: 640px) {
+  .central-onedoc-output__heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .central-onedoc-output__heading .server-button,
+  [data-onedoc-copy-all] {
+    width: 100%;
+  }
+}
