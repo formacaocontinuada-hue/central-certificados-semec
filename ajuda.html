@@ -20,22 +20,29 @@
       </div>
 
       <nav class="server-nav" aria-label="Navegação da Central de Certificados">
+        <!-- Mesmo menu das áreas do Portal SEMEC (portalsemec_tgamt). Itens data-nav-area="semec" aparecem só para contas da SEMEC (js/app.js). -->
         <div class="server-nav__group">
           <p>Principal</p>
-          <a href="index.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10l3 3v15H4V3z"></path><path d="M8 11h8"></path><path d="M8 15h5"></path><path d="M17 3v4h4"></path></svg>Certificados</a>
+          <a href="https://formacaocontinuada-hue.github.io/portalsemec_tgamt/index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>Página inicial do Portal</a>
+          <a href="https://formacaocontinuada-hue.github.io/portalsemec_tgamt/escola.html" data-nav-area="escola"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>Início da Escola</a>
+          <a href="https://formacaocontinuada-hue.github.io/portalsemec_tgamt/semec.html" data-nav-area="semec" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 4l9 7v9h-6v-6H9v6H3z"/></svg>Início da SEMEC</a>
+          <a href="index.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="9" r="5"/><path d="M8.5 13 7 21l5-2.5 5 2.5-1.5-8"/></svg>Central de Certificados</a>
+          <a href="https://formacaocontinuada-hue.github.io/portalsemec_tgamt/calendario.html" data-nav-area="escola"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Calendário Escolar</a>
+          <a href="https://script.google.com/a/macros/edu.tangaradaserra.mt.gov.br/s/AKfycbwasIQGHfuKFS9zlfo5iAREdpAFfWDIMO6jCYn1LVoOnVvfXzui8xbe-nSWyOEWgVIB/exec" data-nav-area="semec" target="_blank" rel="noopener" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Gerador de Calendário</a>
+          <a href="https://formacaocontinuada-hue.github.io/portalsemec_tgamt/escola.html" data-nav-area="semec" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l7-5 7 5v11M10 21v-5h4v5"/></svg>Visão da Escola</a>
         </div>
 
         <div class="server-nav__group">
           <p>Assistência</p>
-          <a class="is-active" href="ajuda.html" data-preserve-school aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.7 2.7 0 0 1 5.1 1.3c0 1.9-2.6 2.2-2.6 4"></path><path d="M12 18h.01"></path></svg>Ajuda</a>
-          <a href="entrar-em-contato.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v13H7l-3 3z"></path><path d="m7 8 5 4 5-4"></path></svg>Entrar em Contato</a>
-          <a href="politica-privacidade.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-5"></path></svg>Política de Privacidade</a>
-          <a href="acessibilidade.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4" r="2"></circle><path d="M5 8h14"></path><path d="M12 6v7"></path><path d="m8 21 4-8 4 8"></path></svg>Acessibilidade</a>
+          <a class="is-active" aria-current="page" href="ajuda.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17h.01"/></svg>Ajuda</a>
+          <a href="entrar-em-contato.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Entrar em contato</a>
+          <a href="politica-privacidade.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.4 3 8.4 7 10 4-1.6 7-5.6 7-10V6z"/></svg>Política de Privacidade</a>
+          <a href="acessibilidade.html" data-preserve-school><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="4.5" r="1.5"/><path d="M5 8h14M12 8v6M9 21l3-7 3 7"/></svg>Acessibilidade</a>
         </div>
 
         <div class="server-nav__group server-nav__group--account">
           <p>Conta</p>
-          <button type="button" data-server-logout><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="m16 17 5-5-5-5"></path><path d="M21 12H9"></path></svg>Sair</button>
+          <button type="button" data-server-logout><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg>Sair</button>
         </div>
       </nav>
     </aside>

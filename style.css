@@ -23575,3 +23575,8 @@ body.school-area-page .school-detail-list dd.school-email-value {
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
 }
+
+/* Menu lateral: itens de outra área (Escola/SEMEC) ficam escondidos */
+.server-nav a[hidden] {
+  display: none !important;
+}

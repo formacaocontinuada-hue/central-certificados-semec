@@ -276,6 +276,36 @@
       );
 
 
+    /* Menu lateral igual ao da área do Portal SEMEC da conta:
+       escola vê o menu da Área da Escola; SEMEC vê o da Área da SEMEC. */
+    const areaMenu =
+      tipo === 'SEMEC' ? 'semec' : 'escola';
+
+    document
+      .querySelectorAll(
+        '[data-nav-area]'
+      )
+      .forEach(
+        el => {
+          el.hidden =
+            el.dataset.navArea !== areaMenu;
+        }
+      );
+
+    document
+      .querySelectorAll(
+        '.server-sidebar__brand span'
+      )
+      .forEach(
+        el => {
+          el.textContent =
+            areaMenu === 'semec'
+              ? 'Área da SEMEC'
+              : 'Área da Escola';
+        }
+      );
+
+
     const textoAltBrasao =
       tipo === 'SEMEC'
         ? 'Brasão de Tangará da Serra'
