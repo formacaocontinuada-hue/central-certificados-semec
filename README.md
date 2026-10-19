@@ -61,3 +61,7 @@ node tests/integration.spec.js
 ```
 
 Ele verifica autenticação simulada, listagem, pesquisa por nome, relatório anual por pessoa, orientação de correção via 1Doc, ausência das ações antigas, responsividade e validação da origem/janela dos serviços.
+
+## Menu lateral
+
+O menu lateral é o mesmo das áreas do Portal SEMEC (`portalsemec_tgamt`, ver `DECISOES.md` de lá). Os itens com `data-nav-area="escola"` ou `data-nav-area="semec"` aparecem conforme o tipo da conta (feito em `js/app.js`). Ferramenta nova com página própria entra no menu do Portal e no menu destas cinco páginas (index, ajuda, entrar-em-contato, politica-privacidade, acessibilidade).
