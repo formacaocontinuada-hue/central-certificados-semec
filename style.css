@@ -7793,7 +7793,7 @@ body.noticias-dialog-open {
   color: var(--white);
   background:
     linear-gradient(90deg, rgba(2, 31, 73, 0.98) 0%, rgba(3, 40, 86, 0.92) 34%, rgba(4, 47, 102, 0.54) 62%, rgba(4, 47, 102, 0.12) 100%),
-    url("assets/banner_acesso_do_servidor.png") center / cover no-repeat;
+    url("assets/banner-acesso.webp") center / cover no-repeat;
   isolation: isolate;
 }
 
@@ -8345,7 +8345,7 @@ body.noticias-dialog-open {
     padding: 34px 0;
     background:
       linear-gradient(180deg, rgba(2, 31, 73, 0.97) 0%, rgba(3, 40, 86, 0.86) 48%, rgba(3, 40, 86, 0.58) 100%),
-      url("assets/banner_acesso_do_servidor.png") 66% center / cover no-repeat;
+      url("assets/banner-acesso.webp") 66% center / cover no-repeat;
   }
 
   .servidor-auth-shell {
@@ -8762,7 +8762,7 @@ body.server-home-page[data-servidor-protected] :is(
   background:
     linear-gradient(90deg, rgba(2, 31, 73, 0.98) 0%, rgba(3, 39, 84, 0.92) 48%, rgba(3, 43, 94, 0.46) 78%, rgba(3, 43, 94, 0.08) 100%),
     linear-gradient(180deg, rgba(2, 31, 73, 0.92) 0%, rgba(2, 31, 73, 0.06) 30%, rgba(2, 31, 73, 0.82) 100%),
-    url("assets/banner_acesso_do_servidor.png") 66% center / cover no-repeat;
+    url("assets/banner-acesso.webp") 66% center / cover no-repeat;
 }
 
 .servidor-login-visual::after {
@@ -8950,7 +8950,7 @@ body.server-home-page[data-servidor-protected] :is(
     align-items: start;
     background:
       linear-gradient(180deg, rgba(2, 31, 73, 0.95) 0%, rgba(3, 39, 84, 0.82) 58%, rgba(3, 43, 94, 0.2) 100%),
-      url("assets/banner_acesso_do_servidor.png") 64% center / cover no-repeat;
+      url("assets/banner-acesso.webp") 64% center / cover no-repeat;
   }
 
   .servidor-login-visual::after {

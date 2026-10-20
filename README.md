@@ -17,6 +17,16 @@ Não fazem parte desta etapa: fluxo interno de solicitações, painel de anális
 
 O acesso à área de certificados é restrito aos gestores autorizados. A conta do 1Doc interno é criada e fornecida previamente pela Prefeitura; não existe cadastro ou criação de acesso por esta página. O endereço institucional utilizado é `https://tangaradaserra.1doc.com.br/b.php?pg=o/login&redirecionar=cGc9cGFpbmVsL2xpc3Rhcg==&n=3`.
 
+## Páginas
+
+- `index.html`: certificados, pesquisa, relatório anual e envio por e-mail;
+- `entrar-em-contato.html`: ajuda de uso + pedido de correção pelo 1Doc + canais da SEMEC (a antiga `ajuda.html` só redireciona para cá);
+- `politica-privacidade.html`, `acessibilidade.html`, `validar-certificado.html`.
+
+## Imagens leves
+
+As páginas usam as versões leves em `assets/` (`assets/marca`, `assets/mascote`, `assets/brasoes/<ID>.webp`, um arquivo por unidade, mapeados em `js/logos.js`). A pasta `assents/` guarda os originais em alta resolução e não deve ser carregada pelas páginas.
+
 ## Identidade visual
 
 Os arquivos têm funções diferentes e não devem ser trocados:
@@ -34,9 +44,11 @@ As únicas ações de backend usadas pela área principal são:
 - `IDENTIFICAR_UNIDADE`;
 - `LISTAR_CERTIFICADOS`;
 - `BUSCAR_CERTIFICADOS`;
-- `REGISTRAR_ACESSO_CERTIFICADO`.
+- `REGISTRAR_ACESSO_CERTIFICADO`;
+- `ENVIAR_CERTIFICADO` (um certificado);
+- `ENVIAR_CERTIFICADOS` (vários certificados da mesma pessoa num e-mail só, com os PDFs anexados).
 
-A comunicação ocorre por um iframe do Apps Script e uma `MessagePort`. A página valida tanto a origem Google quanto a janela exata do iframe antes de aceitar o canal.
+A entrada é feita numa página do Google (implantação institucional do Apps Script), que devolve uma autorização temporária válida por 30 dias neste navegador. As ações vão por `fetch` para a implantação pública, que confere a conta e a unidade em toda ação (`js/backend.js`). A unidade identificada fica guardada por 30 minutos no navegador para as páginas abrirem na hora; ações de leitura são repetidas uma vez sozinhas se a conexão falhar.
 
 O validador público permanece separado em `validar-certificado.html` e exige o ID do certificado e o código completo de autenticidade. A resposta pública não deve expor CPF, matrícula, e-mail, ID interno do servidor, ID do Drive, observações internas ou o hash completo.
 

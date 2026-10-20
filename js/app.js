@@ -8,13 +8,13 @@
 
   const portalMainLogo =
     new URL(
-      'assents/sem_fundo/brasao_portal_semec.png',
+      'assets/marca/brasao-portal-semec.webp',
       window.location.href
     ).href;
 
   const portalManagerSignature =
     new URL(
-      'assents/sem_fundo/assinatura_roselaine_mezz.png',
+      'assets/marca/assinatura-roselaine-mezz.png',
       window.location.href
     ).href;
 
@@ -2399,6 +2399,22 @@
       'Participação';
 
 
+    /* Caixinha para escolher o certificado no envio por e-mail. */
+    if (
+      certificado.id &&
+      certificado.situacaoId === 'ativo'
+    ) {
+      const pick = document.createElement('label');
+      pick.className = 'central-cert-pick';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      box.dataset.certificatePick = certificado.id;
+      box.setAttribute('aria-label', 'Selecionar este certificado para envio por e-mail');
+      pick.append(box, document.createTextNode(' Selecionar'));
+      article.append(pick);
+    }
+
+
     const title =
       document.createElement(
         'h4'
@@ -2727,9 +2743,46 @@
         nome;
 
 
+    const emailButton =
+      document.createElement('button');
+
+    emailButton.className =
+      'server-button server-button--primary';
+
+    emailButton.type =
+      'button';
+
+    emailButton.textContent =
+      '✉ Enviar por e-mail';
+
+    emailButton.dataset
+      .personEmail =
+        nome;
+
+    emailButton.disabled =
+      !certificados.some(
+        c => c.id && c.situacaoId === 'ativo'
+      );
+
+    if (emailButton.disabled) {
+      emailButton.title =
+        'Não há certificados ativos para enviar.';
+    }
+
+    const headerActions =
+      document.createElement('div');
+
+    headerActions.className =
+      'central-person-actions';
+
+    headerActions.append(
+      reportButton,
+      emailButton
+    );
+
     header.append(
       identity,
-      reportButton
+      headerActions
     );
 
 
@@ -5407,6 +5460,149 @@
 
 
   /* =====================================================
+   * ENVIO DE VÁRIOS CERTIFICADOS (UM E-MAIL SÓ)
+   * ===================================================== */
+
+
+  const abrirDialogoEnvioVarios =
+    (nome, selecionados, todos) => {
+
+      if (!backend || !todos.length) {
+        return;
+      }
+
+      const temSelecao = selecionados.length > 0;
+      const plural = n => n === 1 ? 'certificado' : 'certificados';
+
+      openDialog({
+
+        kicker:
+          'Enviar por e-mail',
+
+        title:
+          nome,
+
+        html:
+          '<form class="school-dialog-form" data-send-many-form>' +
+            '<fieldset class="central-send-choice">' +
+              '<legend>O que enviar</legend>' +
+              '<label class="school-check-line">' +
+                '<input type="radio" name="quais" value="selecionados"' + (temSelecao ? ' checked' : ' disabled') + '> ' +
+                '<span>Somente os selecionados (<span data-n-sel></span>)</span>' +
+              '</label>' +
+              '<label class="school-check-line">' +
+                '<input type="radio" name="quais" value="todos"' + (temSelecao ? '' : ' checked') + '> ' +
+                '<span>Todos os certificados ativos (<span data-n-todos></span>)</span>' +
+              '</label>' +
+              (temSelecao ? '' : '<p class="central-send-hint">Para enviar só alguns, feche esta janela e marque “Selecionar” nos certificados desejados.</p>') +
+            '</fieldset>' +
+            '<p>Vai um e-mail só, com os PDFs anexados. Se os arquivos forem grandes demais, o envio é dividido em mais de um e-mail.</p>' +
+            '<label>' +
+              '<span>E-mail do servidor</span>' +
+              '<input type="email" name="emailDestino" autocomplete="email" placeholder="nome@exemplo.com" required maxlength="254">' +
+            '</label>' +
+            '<label class="school-check-line">' +
+              '<input type="checkbox" name="confirmacao" required> Conferi o endereço e confirmo que ele pertence ao servidor correto.' +
+            '</label>' +
+            '<label class="school-check-line">' +
+              '<input type="checkbox" name="salvarContato"> Salvar este e-mail para próximos envios.' +
+            '</label>' +
+            '<p class="central-action-message" role="alert" data-action-error hidden></p>' +
+          '</form>',
+
+        actions:
+          '<button class="server-button server-button--ghost" type="button" data-modal-close>Cancelar</button>' +
+          '<button class="server-button server-button--primary" type="button" data-submit-many-send>Confirmar envio</button>'
+      });
+
+      const form =
+        dialogBody?.querySelector('[data-send-many-form]');
+
+      const submit =
+        dialogActions?.querySelector('[data-submit-many-send]');
+
+      if (!form || !submit) {
+        return;
+      }
+
+      form.querySelector('[data-n-sel]').textContent =
+        selecionados.length + ' ' + plural(selecionados.length);
+
+      form.querySelector('[data-n-todos]').textContent =
+        todos.length + ' ' + plural(todos.length);
+
+      form.querySelector('[name="emailDestino"]')?.focus();
+
+      submit.addEventListener('click', async () => {
+
+        if (!form.reportValidity()) {
+          return;
+        }
+
+        const errorBox = form.querySelector('[data-action-error]');
+        errorBox.hidden = true;
+
+        const data = new FormData(form);
+        const ids = data.get('quais') === 'selecionados' ? selecionados : todos;
+
+        form.querySelectorAll('input, button').forEach(c => { c.disabled = true; });
+        submit.disabled = true;
+        submit.textContent = 'Enviando ' + ids.length + ' ' + plural(ids.length) + '...';
+
+        try {
+
+          const result =
+            extrairResultado(
+              await backend.request(
+                'ENVIAR_CERTIFICADOS',
+                {
+                  idsCertificados: ids,
+                  emailDestino: String(data.get('emailDestino') || '').trim(),
+                  confirmado: data.get('confirmacao') === 'on',
+                  salvarContato: data.get('salvarContato') === 'on'
+                },
+                { timeoutMs: 180000 }
+              )
+            );
+
+          openDialog({
+            kicker: 'Envio concluído',
+            title: result.enviados === result.total ? 'Certificados enviados ao servidor' : 'Envio parcial',
+            html: '<p data-send-result-message></p>',
+            actions: '<button class="server-button server-button--primary" type="button" data-modal-close>Concluir</button>'
+          });
+
+          const msg = dialogBody?.querySelector('[data-send-result-message]');
+
+          if (msg) {
+            msg.textContent =
+              `${result.enviados} de ${result.total} ${plural(result.total)} enviado${result.enviados === 1 ? '' : 's'} para ${result.emailDestinoMascarado || 'o e-mail informado'}` +
+              (result.mensagens > 1 ? `, em ${result.mensagens} e-mails.` : '.') +
+              (result.enviados === result.total ? '' : ' ' + (result.mensagem || ''));
+          }
+
+          document
+            .querySelectorAll('[data-certificate-pick]:checked')
+            .forEach(c => { c.checked = false; });
+
+        } catch (error) {
+
+          errorBox.textContent = error.message || 'Não foi possível enviar os certificados.';
+          errorBox.hidden = false;
+
+          form.querySelectorAll('input, button').forEach(c => { c.disabled = false; });
+          if (!temSelecao) {
+            const r = form.querySelector('[value="selecionados"]');
+            if (r) r.disabled = true;
+          }
+          submit.disabled = false;
+          submit.textContent = 'Confirmar envio';
+        }
+      });
+    };
+
+
+  /* =====================================================
    * SOLICITAÇÃO FORMAL VIA 1DOC
    * ===================================================== */
 
@@ -6111,6 +6307,40 @@
           }
 
 
+          return;
+        }
+
+
+        const emailPersonButton =
+          event.target.closest(
+            '[data-person-email]'
+          );
+
+        if (
+          emailPersonButton
+        ) {
+          const card =
+            emailPersonButton.closest(
+              '.school-person-report-card'
+            );
+
+          const caixas =
+            Array.from(
+              card?.querySelectorAll(
+                '[data-certificate-pick]'
+              ) || []
+            );
+
+          abrirDialogoEnvioVarios(
+            String(
+              emailPersonButton.dataset.personEmail || ''
+            ),
+            caixas
+              .filter(c => c.checked)
+              .map(c => c.dataset.certificatePick),
+            caixas
+              .map(c => c.dataset.certificatePick)
+          );
           return;
         }
 

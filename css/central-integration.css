@@ -295,3 +295,42 @@ body.school-area-page .school-unit-card__logo img {
     width: 100%;
   }
 }
+
+/* Envio de vários certificados por e-mail (20/10/2026) */
+.central-person-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+.central-cert-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  padding: 6px 12px;
+  border: 1px solid rgba(190, 211, 236, 0.9);
+  border-radius: 999px;
+  background: #f8fbff;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #0b376b;
+  cursor: pointer;
+}
+.central-cert-pick input { width: 18px; height: 18px; margin: 0; accent-color: #0b376b; }
+.central-cert-pick:has(input:checked) { background: #e2efff; border-color: #0b5ca8; }
+.central-send-choice {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(190, 211, 236, 0.9);
+  border-radius: 12px;
+}
+.central-send-choice legend { padding: 0 6px; font-weight: 700; color: #0b376b; }
+.central-send-hint { font-size: 0.9rem; color: #58708d; }
+@media (max-width: 720px) {
+  .central-person-actions { flex-direction: column; }
+  .central-person-actions .server-button { width: 100%; }
+}

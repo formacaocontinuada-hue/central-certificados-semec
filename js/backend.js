@@ -31,11 +31,20 @@
   const CHAVE_SESSAO = 'centralCertificadosEntrada';
   const CHAVE_NONCE = 'centralCertificadosNonceEntrada';
   const MARGEM_EXPIRACAO_MS = 60 * 1000;
-  const REQUEST_TIMEOUT_MS = 30000;
+  const REQUEST_TIMEOUT_MS = 45000;
+  const CHAVE_IDENTIDADE = 'centralCertificadosUnidade';
+  const IDENTIDADE_VALIDADE_MS = 30 * 60 * 1000;
 
-  const MASCOTE_ENTRADA = 'assents/mascote/tangara-login.png';
-  const MASCOTE_EXPIRADA = 'assents/mascote/tangara-sessao-expirada.png';
-  const BRASAO = 'assents/sem_fundo/brasao_tangara.png';
+  // Ações que só leem: podem ser repetidas sozinhas se a conexão falhar.
+  const ACOES_SO_LEITURA = new Set([
+    'IDENTIFICAR_UNIDADE',
+    'LISTAR_CERTIFICADOS',
+    'BUSCAR_CERTIFICADOS'
+  ]);
+
+  const MASCOTE_ENTRADA = 'assets/mascote/tangara-login.webp';
+  const MASCOTE_EXPIRADA = 'assets/mascote/tangara-sessao-expirada.webp';
+  const BRASAO = 'assets/marca/brasao-tangara.webp';
 
 
   class BridgeError extends Error {
@@ -88,9 +97,33 @@
     sessaoEmMemoria = null;
     try {
       localStorage.removeItem(CHAVE_SESSAO);
+      localStorage.removeItem(CHAVE_IDENTIDADE);
     } catch (_) {
       // Nada a limpar.
     }
+  };
+
+
+  /*
+   * A unidade identificada fica guardada por 30 minutos neste navegador,
+   * presa à autorização atual. Assim as outras páginas (Contato,
+   * Privacidade, Acessibilidade) abrem na hora, sem esperar o servidor.
+   * O servidor continua conferindo a unidade em toda ação.
+   */
+  const lerIdentidade = (token) => {
+    try {
+      const salvo = JSON.parse(localStorage.getItem(CHAVE_IDENTIDADE) || 'null');
+      if (salvo && salvo.token === token && Date.now() - salvo.em < IDENTIDADE_VALIDADE_MS) {
+        return salvo.resposta;
+      }
+    } catch (_) { /* sem armazenamento */ }
+    return null;
+  };
+
+  const salvarIdentidade = (token, resposta) => {
+    try {
+      localStorage.setItem(CHAVE_IDENTIDADE, JSON.stringify({ token, em: Date.now(), resposta }));
+    } catch (_) { /* sem armazenamento */ }
   };
 
 
@@ -346,7 +379,7 @@
       return new Promise(() => {});
     }
 
-    async request(action, data = {}) {
+    async request(action, data = {}, opcoes = {}) {
 
       if (!URL_API.startsWith('https://')) {
         throw new BridgeError('A Central ainda não foi configurada.', 'CONFIGURACAO_PENDENTE');
@@ -359,41 +392,66 @@
         throw new BridgeError('Entre novamente com a conta institucional.', 'SESSAO_INVALIDA');
       }
 
-      const controle = new AbortController();
-      const limite = window.setTimeout(() => controle.abort(), REQUEST_TIMEOUT_MS);
+      if (action === 'IDENTIFICAR_UNIDADE') {
+        const guardada = lerIdentidade(sessao.token);
+        if (guardada) return guardada;
+      }
+
+      const limiteMs = Number(opcoes.timeoutMs) || REQUEST_TIMEOUT_MS;
+      const tentativas = ACOES_SO_LEITURA.has(action) ? 2 : 1;
 
       let resposta;
 
-      try {
-        const http = await fetch(URL_API, {
-          method: 'POST',
-          redirect: 'follow',
-          signal: controle.signal,
-          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-          body: JSON.stringify({
-            canal: CHANNEL,
-            acao: action,
-            dados: data,
-            token: sessao.token
-          })
-        });
+      for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
+        const controle = new AbortController();
+        const limite = window.setTimeout(() => controle.abort(), limiteMs);
 
-        resposta = await http.json();
+        try {
+          const http = await fetch(URL_API, {
+            method: 'POST',
+            redirect: 'follow',
+            signal: controle.signal,
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({
+              canal: CHANNEL,
+              acao: action,
+              dados: data,
+              token: sessao.token
+            })
+          });
 
-      } catch (erro) {
-        throw new BridgeError(
-          erro && erro.name === 'AbortError'
-            ? 'O backend demorou para responder. Tente novamente.'
-            : 'Não foi possível falar com a Central. Verifique a conexão e tente novamente.',
-          erro && erro.name === 'AbortError' ? 'REQUEST_TIMEOUT' : 'REQUEST_SEND_FAILED'
-        );
-      } finally {
-        window.clearTimeout(limite);
+          resposta = await http.json();
+          break;
+
+        } catch (erro) {
+          const tempo = erro && erro.name === 'AbortError';
+          if (tentativa < tentativas) {
+            // Falha passageira (rede ou servidor acordando): tenta mais uma vez.
+            await new Promise((ok) => window.setTimeout(ok, 1200));
+            continue;
+          }
+          throw new BridgeError(
+            tempo
+              ? 'A Central demorou para responder. Tente novamente.'
+              : 'Não foi possível falar com a Central. Verifique a conexão e tente novamente.',
+            tempo ? 'REQUEST_TIMEOUT' : 'REQUEST_SEND_FAILED'
+          );
+        } finally {
+          window.clearTimeout(limite);
+        }
       }
 
       if (resposta && resposta.codigo === 'SESSAO_INVALIDA') {
         limparSessao();
         mostrarTelaEntrada('expirada');
+      }
+
+      if (
+        action === 'IDENTIFICAR_UNIDADE' &&
+        resposta && resposta.ok !== false &&
+        resposta.resultado && resposta.resultado.ok !== false
+      ) {
+        salvarIdentidade(sessao.token, resposta);
       }
 
       return resposta;
