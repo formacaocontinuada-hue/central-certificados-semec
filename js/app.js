@@ -2353,268 +2353,83 @@
     certificado
   ) => {
 
-    const article =
-      document.createElement(
-        'article'
-      );
+    /*
+     * Uma linha por certificado: caixinha, nome do evento,
+     * uma linha curta de detalhes e três ações compactas.
+     * A unidade aparece uma vez só, no cabeçalho da pessoa.
+     */
+    const article = document.createElement('article');
+    article.className = 'central-cert-line';
+    article.dataset.personName = certificado.nome;
+    article.dataset.ano = certificado.ano;
+    article.dataset.formacao = certificado.formacaoId;
+    article.dataset.situacao = certificado.situacaoId;
 
+    const ativo = Boolean(certificado.id) && certificado.situacaoId === 'ativo';
 
-    article.className =
-      'school-certificate-row';
-
-
-    article.dataset
-      .personName =
-        certificado.nome;
-
-
-    article.dataset
-      .ano =
-        certificado.ano;
-
-
-    article.dataset
-      .formacao =
-        certificado
-          .formacaoId;
-
-
-    article.dataset
-      .situacao =
-        certificado
-          .situacaoId;
-
-
-    const type =
-      document.createElement(
-        'span'
-      );
-
-
-    type.className =
-      'school-type';
-
-
-    type.textContent =
-      'Participação';
-
-
-    /* Caixinha para escolher o certificado no envio por e-mail. */
-    if (
-      certificado.id &&
-      certificado.situacaoId === 'ativo'
-    ) {
-      const pick = document.createElement('label');
-      pick.className = 'central-cert-pick';
+    // seleção
+    const pickCell = document.createElement('div');
+    pickCell.className = 'central-cert-line__pick';
+    if (ativo) {
       const box = document.createElement('input');
       box.type = 'checkbox';
       box.dataset.certificatePick = certificado.id;
-      box.setAttribute('aria-label', 'Selecionar este certificado para envio por e-mail');
-      pick.append(box, document.createTextNode(' Selecionar'));
-      article.append(pick);
+      box.setAttribute('aria-label', 'Selecionar para envio por e-mail: ' + (certificado.eventoNome || certificado.formacaoNome));
+      pickCell.append(box);
     }
 
+    // texto
+    const info = document.createElement('div');
+    info.className = 'central-cert-line__info';
 
-    const title =
-      document.createElement(
-        'h4'
-      );
+    const title = document.createElement('h4');
+    title.textContent = certificado.eventoNome || certificado.formacaoNome;
 
+    const meta = document.createElement('p');
+    meta.className = 'central-cert-line__meta';
+    const partes = [];
+    if (certificado.eventoNome && certificado.formacaoNome) partes.push(certificado.formacaoNome);
+    if (certificado.dataPeriodo) partes.push(certificado.dataPeriodo);
+    if (certificado.cargaHoraria && !/não informad/i.test(certificado.cargaHoraria)) partes.push(certificado.cargaHoraria);
+    meta.textContent = partes.join(' · ');
 
-    title.textContent =
-      certificado
-        .formacaoNome;
+    info.append(title);
+    if (partes.length) info.append(meta);
 
-
-    const details =
-      document.createElement(
-        'dl'
-      );
-
-
-    details.className =
-      'school-detail-list';
-
-
-    adicionarDetalhe(
-      details,
-      'Unidade vinculada',
-      certificado
-        .unidadeNome
-    );
-
-
-    adicionarDetalhe(
-      details,
-      'Carga horária',
-      certificado
-        .cargaHoraria
-    );
-
-
-    adicionarDetalhe(
-      details,
-      'Ano / situação',
-      `${
-        certificado.ano
-      } - ${
-        certificado.situacao
-      }`
-    );
-
-
-    const actions =
-      document.createElement(
-        'div'
-      );
-
-
-    actions.className =
-      'school-table-actions';
-
-
-    const viewButton =
-      document.createElement(
-        'button'
-      );
-
-
-    viewButton.className =
-      'server-button server-button--primary';
-
-
-    viewButton.type =
-      'button';
-
-
-    viewButton.textContent =
-      'Visualizar';
-
-
-    viewButton.dataset
-      .certificateView =
-        certificado
-          .visualizacaoUrl;
-
-
-    viewButton.disabled =
-      !certificado
-        .visualizacaoUrl;
-
-
-    const downloadButton =
-      document.createElement(
-        'button'
-      );
-
-
-    downloadButton.className =
-      'server-button server-button--ghost';
-
-
-    downloadButton.type =
-      'button';
-
-
-    downloadButton.textContent =
-      'Baixar PDF';
-
-
-    downloadButton.dataset
-      .certificateDownload =
-        certificado
-          .downloadUrl;
-
-
-    downloadButton.disabled =
-      !certificado
-        .downloadUrl;
-
-
-    if (
-      !certificado
-        .visualizacaoUrl ||
-      !certificado
-        .downloadUrl
-    ) {
-
-      const unavailable =
-        'O PDF ainda não foi disponibilizado pelo registro oficial.';
-
-
-      if (
-        !certificado
-          .visualizacaoUrl
-      ) {
-        viewButton.title =
-          unavailable;
-      }
-
-
-      if (
-        !certificado
-          .downloadUrl
-      ) {
-        downloadButton.title =
-          unavailable;
-      }
+    if (!ativo) {
+      const badge = document.createElement('span');
+      badge.className = 'central-cert-line__badge';
+      badge.textContent = certificado.situacao || 'Indisponível';
+      title.append(' ', badge);
     }
 
+    // ações
+    const actions = document.createElement('div');
+    actions.className = 'central-cert-line__actions';
 
-    const sendButton =
-      document.createElement(
-        'button'
-      );
+    const botao = (texto, classe, dado, valor, desativado, dica) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'server-button ' + classe + ' central-cert-line__btn';
+      b.textContent = texto;
+      b.dataset[dado] = valor || '';
+      b.disabled = Boolean(desativado);
+      if (dica) b.title = dica;
+      return b;
+    };
 
-
-    sendButton.className =
-      'server-button server-button--ghost';
-
-
-    sendButton.type =
-      'button';
-
-
-    sendButton.textContent =
-      'Enviar ao servidor';
-
-
-    sendButton.dataset
-      .certificateSend =
-        certificado.id;
-
-
-    sendButton.disabled =
-      !certificado.id ||
-      certificado.situacaoId !==
-        'ativo';
-
-
-    if (
-      certificado.situacaoId !==
-      'ativo'
-    ) {
-
-      sendButton.title =
-        'O envio por e-mail está disponível somente para certificados ativos.';
-    }
-
+    const semPdf = 'O PDF ainda não foi disponibilizado pelo registro oficial.';
 
     actions.append(
-      viewButton,
-      downloadButton,
-      sendButton
+      botao('Ver', 'server-button--ghost', 'certificateView', certificado.visualizacaoUrl,
+        !certificado.visualizacaoUrl, certificado.visualizacaoUrl ? 'Visualizar o certificado' : semPdf),
+      botao('Baixar', 'server-button--ghost', 'certificateDownload', certificado.downloadUrl,
+        !certificado.downloadUrl, certificado.downloadUrl ? 'Baixar o PDF' : semPdf),
+      botao('Enviar', 'server-button--ghost', 'certificateSend', certificado.id,
+        !ativo, ativo ? 'Enviar só este certificado por e-mail' : 'O envio por e-mail está disponível somente para certificados ativos.')
     );
 
-
-    article.append(
-      type,
-      title,
-      details,
-      actions
-    );
-
-
+    article.append(pickCell, info, actions);
     return article;
   };
 
@@ -2644,14 +2459,18 @@
       'school-person-report-header';
 
 
+    /* O nome da pessoa abre e fecha a lista de certificados. */
     const identity =
       document.createElement(
-        'div'
+        'button'
       );
+
+    identity.type = 'button';
+    identity.setAttribute('aria-expanded', 'false');
 
 
     identity.className =
-      'school-person-report-identity';
+      'school-person-report-identity central-person-toggle';
 
 
     const cargo =
@@ -2687,8 +2506,10 @@
 
     const title =
       document.createElement(
-        'h3'
+        'span'
       );
+
+    title.className = 'central-person-name';
 
 
     title.textContent =
@@ -2697,7 +2518,7 @@
 
     const summary =
       document.createElement(
-        'p'
+        'span'
       );
 
 
@@ -2705,18 +2526,26 @@
       'school-person-report-summary';
 
 
-    summary.textContent =
-      `${certificados.length} participaç${
-        certificados.length === 1
-          ? 'ão localizada'
-          : 'ões localizadas'
-      } em 2026`;
+    const unidades =
+      Array.from(new Set(certificados.map(c => c.unidadeNome).filter(Boolean)));
 
+    summary.textContent =
+      (cargo && chaveCanonica(cargo) !== 'servidor' ? `${cargo} · ` : '') +
+      `${certificados.length} certificado${certificados.length === 1 ? '' : 's'} em 2026` +
+      (unidades.length === 1 ? ` · ${unidades[0]}` : '');
+
+
+    const chevron = document.createElement('span');
+    chevron.className = 'central-person-chevron';
+    chevron.setAttribute('aria-hidden', 'true');
+
+    const textos = document.createElement('span');
+    textos.className = 'central-person-texts';
+    textos.append(title, summary);
 
     identity.append(
-      type,
-      title,
-      summary
+      chevron,
+      textos
     );
 
 
@@ -2794,6 +2623,20 @@
 
     certificateList.className =
       'school-person-certificate-list';
+
+    certificateList.id =
+      'lista-' + Math.random().toString(36).slice(2, 10);
+
+    certificateList.hidden = true;
+
+    identity.setAttribute('aria-controls', certificateList.id);
+
+    identity.addEventListener('click', () => {
+      const abrir = certificateList.hidden;
+      certificateList.hidden = !abrir;
+      identity.setAttribute('aria-expanded', String(abrir));
+      article.classList.toggle('is-open', abrir);
+    });
 
 
     certificateList.append(
@@ -2889,6 +2732,12 @@
           )
       )
     );
+
+
+    // Uma pessoa só na tela (pesquisa pelo nome): já abre a lista.
+    if (grupos.size === 1) {
+      container.querySelector('.central-person-toggle')?.click();
+    }
   };
 
 

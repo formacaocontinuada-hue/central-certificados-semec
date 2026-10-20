@@ -303,25 +303,6 @@ body.school-area-page .school-unit-card__logo img {
   gap: 10px;
   justify-content: flex-end;
 }
-.central-cert-pick {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  justify-self: start;
-  align-self: flex-start;
-  width: fit-content;
-  max-width: 100%;
-  padding: 6px 12px;
-  border: 1px solid rgba(190, 211, 236, 0.9);
-  border-radius: 999px;
-  background: #f8fbff;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #0b376b;
-  cursor: pointer;
-}
-.central-cert-pick input { width: 18px; height: 18px; margin: 0; accent-color: #0b376b; }
-.central-cert-pick:has(input:checked) { background: #e2efff; border-color: #0b5ca8; }
 .central-send-choice {
   margin: 0;
   padding: 12px 14px;
@@ -334,3 +315,124 @@ body.school-area-page .school-unit-card__logo img {
   .central-person-actions { flex-direction: column; }
   .central-person-actions .server-button { width: 100%; }
 }
+
+/* Lista compacta de certificados da pessoa (20/10/2026) */
+.school-person-certificate-list { gap: 0; padding: 4px 14px; }
+.central-cert-line {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px solid rgba(190, 211, 236, 0.7);
+}
+.central-cert-line:last-child { border-bottom: 0; }
+.central-cert-line:has(input:checked) { background: #f1f7ff; border-radius: 10px; }
+.central-cert-line__pick input { width: 20px; height: 20px; margin: 0; accent-color: #0b376b; cursor: pointer; }
+.central-cert-line__info { min-width: 0; }
+.central-cert-line__info h4 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.35;
+  color: #0b376b;
+  overflow-wrap: anywhere;
+}
+.central-cert-line__meta { margin: 2px 0 0; font-size: 0.88rem; color: #58708d; }
+.central-cert-line__badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fdecea;
+  color: #b42318;
+  font-size: 0.75rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+.central-cert-line__actions { display: flex; gap: 6px; }
+.central-cert-line__btn.server-button { min-height: 36px; padding: 0 12px; font-size: 0.85rem; }
+@media (max-width: 720px) {
+  .central-cert-line { grid-template-columns: 28px minmax(0, 1fr); row-gap: 8px; align-items: start; }
+  .central-cert-line__pick { padding-top: 2px; }
+  .central-cert-line__actions { grid-column: 2; }
+  .central-cert-line__btn.server-button { flex: 1; width: auto; }
+}
+
+/* Cabeçalho da pessoa em azul do Portal, para separar uma pessoa da outra */
+.school-person-report-card { border-color: #0b376b; overflow: hidden; }
+.school-person-report-card .school-person-report-header {
+  background: #0b376b;
+  border-bottom: 0;
+}
+.school-person-report-card .school-person-report-header h3 { color: #ffffff; }
+.school-person-report-card .school-person-report-summary { color: #d5e5f5; }
+.school-person-report-card .central-person-actions .server-button--ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.7);
+  color: #ffffff;
+}
+.school-person-report-card .central-person-actions .server-button--ghost:hover { background: rgba(255, 255, 255, 0.12); }
+.school-person-report-card .central-person-actions .server-button--primary {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: #0b376b;
+}
+.school-person-report-card .central-person-actions .server-button--primary:hover { background: #e2efff; }
+.school-person-report-card .central-person-actions .server-button:disabled { opacity: 0.55; }
+
+/* No celular, o brasão da unidade sai do topo da página (fica só no computador) */
+@media (max-width: 720px) {
+  .server-topbar .server-user-summary .server-avatar--school { display: none; }
+  .server-topbar .server-topbar__actions { display: none !important; }
+  .server-topbar { grid-template-rows: auto !important; min-height: 0 !important; }
+}
+
+/* Cartão da pessoa abre e fecha (lista de certificados expansível) */
+.school-person-report-card .central-person-toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  color: #ffffff;
+}
+.central-person-toggle:focus-visible { outline: 3px solid #f2c94c; outline-offset: 4px; border-radius: 8px; }
+.central-person-texts { display: grid; gap: 4px; min-width: 0; }
+.school-person-report-card .central-person-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #ffffff;
+}
+.school-person-report-card .central-person-texts .school-person-report-summary { font-size: 0.9rem; font-weight: 600; color: #d5e5f5; }
+.central-person-chevron {
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14);
+  position: relative;
+  transition: transform 0.2s ease;
+}
+.central-person-chevron::before {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 9px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #ffffff;
+  border-bottom: 2px solid #ffffff;
+  transform: rotate(-45deg);
+}
+.school-person-report-card.is-open .central-person-chevron { transform: rotate(90deg); }
+.school-person-report-card:not(.is-open) .school-person-report-header { border-radius: inherit; }
+.school-person-report-card + .school-person-report-card { margin-top: 10px; }
+@media (prefers-reduced-motion: reduce) { .central-person-chevron { transition: none; } }
+.school-person-certificate-list[hidden] { display: none !important; }
