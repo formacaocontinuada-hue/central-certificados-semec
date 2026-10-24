@@ -12,12 +12,6 @@
       window.location.href
     ).href;
 
-  const portalManagerSignature =
-    new URL(
-      'assets/marca/assinatura-roselaine-mezz.png',
-      window.location.href
-    ).href;
-
   const centralMainLogo =
     portalMainLogo ||
     municipioMainLogo;
@@ -4125,9 +4119,8 @@
       'th{background:#eaf4ff}.empty-stage{padding:10px;border:1px dashed #c8d9ec;color:#58708d}' +
       '.official-note{margin-top:22px;padding:14px;border:1px solid #c8d9ec;border-radius:7px;background:#f8fbff;color:#294b70;text-align:justify}' +
       '.official-note h2{text-align:left}.source{font-size:11.5px;color:#58708d}' +
-      '.signature-block{display:grid;justify-items:center;margin:28px auto 10px;text-align:center;break-inside:avoid}' +
-      '.signature-block img{display:block;width:230px;max-width:70%;height:92px;object-fit:contain;margin-bottom:-4px}' +
-      '.signature-block strong{font-size:14px}.signature-block span{display:block;color:#294b70}' +
+      '.auth-block{margin-top:16px;padding:14px;border:1px solid #c8d9ec;border-left:4px solid #062a5a;border-radius:7px;background:#fff;color:#294b70;break-inside:avoid}' +
+      '.auth-block h2{text-align:left;color:#062a5a}' +
       '.actions{margin:24px 0;text-align:center}.actions button{background:#062a5a;color:#fff;border:0;border-radius:6px;padding:10px 16px;font-weight:700;cursor:pointer}.actions button:disabled{cursor:wait;opacity:.68}' +
       '.document-footer{margin-top:16px;padding-top:10px;border-top:1px solid #c8d9ec;color:#58708d;font-size:11px;text-align:center}' +
       '@media(max-width:700px){body{padding:18px}.identification{grid-template-columns:1fr}.identification .wide{grid-column:auto}header{align-items:flex-start}.portal-logo{width:72px;height:72px}}' +
@@ -4374,7 +4367,8 @@
           'Formação ou evento',
           'Unidade vinculada',
           'Carga horária',
-          'Situação do registro'
+          'Situação do registro',
+          'Código do certificado'
         ].forEach(
           label =>
             adicionarTextoRelatorio(
@@ -4419,7 +4413,8 @@
               nomeEventoRelatorio,
               participacao.unidadeNome,
               participacao.cargaHoraria,
-              participacao.situacao
+              participacao.situacao,
+              participacao.id || '—'
             ].forEach(
               value =>
                 adicionarTextoRelatorio(
@@ -4540,65 +4535,59 @@
     );
 
 
-    const signatureBlock =
+    /*
+     * Autenticidade sem assinatura manuscrita: o relatório é emitido
+     * por conta institucional autenticada e remete à conferência dos
+     * certificados individuais. Nenhuma imagem de assinatura de pessoa
+     * é publicada no site.
+     */
+    const authBlock =
       doc.createElement(
         'section'
       );
 
-
-    signatureBlock.className =
-      'signature-block';
-
-
-    const signatureImage =
-      doc.createElement(
-        'img'
-      );
-
-
-    signatureImage.src =
-      portalManagerSignature;
-
-
-    signatureImage.alt =
-      'Assinatura de Roselaine Mezz';
-
-
-    signatureBlock.appendChild(
-      signatureImage
-    );
-
+    authBlock.className =
+      'auth-block';
 
     adicionarTextoRelatorio(
-      signatureBlock,
-      'strong',
-      'Roselaine Mezz'
+      authBlock,
+      'h2',
+      'Autenticidade do documento'
     );
 
+    const unidadeEmissora =
+      (
+        document.querySelector('[data-school-name]')?.textContent ||
+        ''
+      ).trim() || 'Unidade institucional autenticada';
 
     adicionarTextoRelatorio(
-      signatureBlock,
-      'span',
-      'Gestora do Portal SEMEC'
+      authBlock,
+      'p',
+      'Documento emitido eletronicamente pela Central de Certificados do Portal SEMEC, mediante acesso com conta institucional autenticada. Dispensa assinatura manuscrita.'
     );
-
 
     adicionarTextoRelatorio(
-      signatureBlock,
-      'span',
-      'Departamento Pedagógico — SEMEC'
+      authBlock,
+      'p',
+      `Emitido por: ${unidadeEmissora}`
     );
-
 
     adicionarTextoRelatorio(
-      signatureBlock,
-      'span',
-      'Tangará da Serra — MT'
+      authBlock,
+      'p',
+      'Cada participação relacionada corresponde a um certificado individual com código próprio, que pode ser conferido pelo QR Code impresso no certificado, na página pública de validação do Portal SEMEC.'
     );
 
+    adicionarTextoRelatorio(
+      authBlock,
+      'p',
+      'Responsável pelos registros: Secretaria Municipal de Educação de Tangará da Serra — MT, Departamento Pedagógico.',
+      'source'
+    );
 
     main.appendChild(
-      signatureBlock
+      authBlock
     );
 
 
@@ -4620,17 +4609,9 @@
     );
 
 
-    Promise.all(
-      [
-        carregarImagemNoRelatorio(
-          crest,
-          portalMainLogo
-        ),
-        carregarImagemNoRelatorio(
-          signatureImage,
-          portalManagerSignature
-        )
-      ]
+    carregarImagemNoRelatorio(
+      crest,
+      portalMainLogo
     ).finally(
       () => {
 

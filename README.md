@@ -33,9 +33,12 @@ Os arquivos têm funções diferentes e não devem ser trocados:
 
 - `assents/sem_fundo/brasao_portal_semec.png`: identidade própria do Portal SEMEC, usada na navegação e no ícone das páginas;
 - `assents/sem_fundo/brasao_tangara.png`: brasão oficial da Prefeitura de Tangará da Serra, usado para representar a Prefeitura/SEMEC e como fallback institucional das unidades.
-- `assents/sem_fundo/assinatura_roselaine_mezz.png`: assinatura institucional exibida no relatório anual emitido pelo Portal SEMEC.
 
 Os brasões específicos das unidades continuam vinculados por ID estável em `js/escolas.js`. O parâmetro `?escola=` serve somente para pré-visualização; em produção, a unidade autenticada pelo backend prevalece.
+
+## Segurança do repositório
+
+Este repositório e o site são públicos. Não publicar aqui assinaturas, listas de servidores, CPF, planilhas, IDs de pastas ou qualquer dado pessoal. O relatório anual não usa imagem de assinatura: a autenticidade vem da emissão por conta institucional autenticada e dos códigos dos certificados.
 
 ## Integração
 
