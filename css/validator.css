@@ -297,6 +297,26 @@ body {
   color: var(--validator-navy);
 }
 
+/* Caminho de volta ao Portal (18/11/2026) */
+.validator-footer__link {
+  justify-self: start;
+  margin-top: 8px;
+  color: var(--validator-navy);
+  font-weight: 700;
+}
+
+.validator-header__link {
+  margin-left: auto;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  padding: 7px 14px;
+  color: inherit;
+  font-size: .88rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .validator-header__inner {
     min-height: 82px;
