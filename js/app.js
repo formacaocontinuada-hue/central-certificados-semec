@@ -2800,6 +2800,20 @@
       !visible;
 
 
+    const ajudaPesquisa =
+      searchEmpty
+        .querySelector(
+          '[data-search-help]'
+        );
+
+    if (
+      ajudaPesquisa
+    ) {
+      ajudaPesquisa.hidden =
+        title !== 'Nenhum certificado encontrado';
+    }
+
+
     const strong =
       searchEmpty
         .querySelector(
