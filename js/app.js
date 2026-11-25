@@ -2420,7 +2420,10 @@
       botao('Baixar', 'server-button--ghost', 'certificateDownload', certificado.downloadUrl,
         !certificado.downloadUrl, certificado.downloadUrl ? 'Baixar o PDF' : semPdf),
       botao('Enviar', 'server-button--ghost', 'certificateSend', certificado.id,
-        !ativo, ativo ? 'Enviar só este certificado por e-mail' : 'O envio por e-mail está disponível somente para certificados ativos.')
+        !ativo, ativo ? 'Enviar só este certificado por e-mail' : 'O envio por e-mail está disponível somente para certificados ativos.'),
+      // 25/11/2026: pedido de correção direto ao grupo responsável (pedidos-correcao.html).
+      botao('Corrigir', 'server-button--ghost', 'certificateFix', certificado.id,
+        !ativo, ativo ? 'Pedir a correção deste certificado' : 'Só certificados ativos podem ser corrigidos.')
     );
 
     article.append(pickCell, info, actions);
@@ -6125,6 +6128,17 @@
           event.target.closest(
             '[data-certificate-send]'
           );
+
+
+        // Pedido de correção (25/11/2026): leva o código pelo sessionStorage, sem dados na URL.
+        const fixButton = event.target.closest('[data-certificate-fix]');
+        if (fixButton && fixButton.dataset.certificateFix) {
+          try {
+            sessionStorage.setItem('centralPedidoCorrecao', JSON.stringify({ id: String(fixButton.dataset.certificateFix) }));
+          } catch (_) { /* sem armazenamento: a página abre sem o certificado */ }
+          window.location.href = 'pedidos-correcao.html' + window.location.search;
+          return;
+        }
 
 
         if (
