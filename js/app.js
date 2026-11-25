@@ -275,6 +275,15 @@
     const areaMenu =
       tipo === 'SEMEC' ? 'semec' : 'escola';
 
+    /* Quem chegou do Formador ou da página pública (?de=) fica com o menu
+       daquela área (js/volta.js). Sorteia e Calculadora levam a área da conta. */
+    const voltaForcada =
+      !!(window.PortalVolta && window.PortalVolta.forcado);
+
+    if (window.PortalVolta) window.PortalVolta.definirArea(areaMenu);
+
+    if (!voltaForcada) {
+
     document
       .querySelectorAll(
         '[data-nav-area]'
@@ -298,6 +307,7 @@
               : 'Área da Escola';
         }
       );
+    }
 
 
     const textoAltBrasao =
